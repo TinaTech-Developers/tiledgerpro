@@ -1,11 +1,12 @@
-// /app/api/customers/[id]/route.ts
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
 
 // GET a single customer by ID
 export async function GET(
   req: NextRequest,
- context: { params: Promise<{ id: string }> },
+  context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
 

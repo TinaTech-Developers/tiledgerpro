@@ -1,10 +1,12 @@
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
 
 // GET invoice by ID
 export async function GET(
   req: NextRequest,
- context: { params: Promise<{ id: string }> },
+  context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
   try {
