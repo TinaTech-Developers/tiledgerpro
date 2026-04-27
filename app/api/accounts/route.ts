@@ -1,22 +1,28 @@
 export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authMiddleware } from "@/lib/middleware";
 
-// GET all accounts for the user's organization
+// =========================
+// GET ACCOUNTS
+// =========================
 export async function GET(req: NextRequest) {
-  const request = await authMiddleware(req);
-  if (request instanceof NextResponse) return request; // auth failed
-
-  const user = (request as any).user;
-
   try {
+    const request = await authMiddleware(req);
+    if (request instanceof NextResponse) return request;
+
+    const user = (request as any).user;
+
     const accounts = await prisma.account.findMany({
       where: { organizationId: user.organizationId },
       include: { chartOfAccount: true },
     });
+
     return NextResponse.json(accounts);
   } catch (err) {
+    console.error("GET ACCOUNTS ERROR:", err);
+
     return NextResponse.json(
       { error: "Failed to fetch accounts" },
       { status: 500 },
@@ -24,15 +30,17 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST create account
+// =========================
+// CREATE ACCOUNT
+// =========================
 export async function POST(req: NextRequest) {
-  const request = await authMiddleware(req);
-  if (request instanceof NextResponse) return request;
-
-  const user = (request as any).user;
-
   try {
-    const body = await request.json();
+    const request = await authMiddleware(req);
+    if (request instanceof NextResponse) return request;
+
+    const user = (request as any).user;
+    const body = await req.json();
+
     const { name, type, chartOfAccountId } = body;
 
     const account = await prisma.account.create({
@@ -40,7 +48,7 @@ export async function POST(req: NextRequest) {
         name,
         type,
         balance: 0,
-        organizationId: user.organizationId, // ✅ direct field
+        organizationId: user.organizationId,
         chartOfAccountId: chartOfAccountId || undefined,
       },
       include: { chartOfAccount: true },
@@ -48,6 +56,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(account, { status: 201 });
   } catch (err) {
+    console.error("POST ACCOUNT ERROR:", err);
+
     return NextResponse.json(
       { error: "Failed to create account" },
       { status: 500 },
@@ -55,25 +65,24 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PUT update account
+// =========================
+// UPDATE ACCOUNT
+// =========================
 export async function PUT(req: NextRequest) {
-  const request = await authMiddleware(req);
-  if (request instanceof NextResponse) return request;
-
-  const user = (request as any).user;
-
   try {
-    const body = await request.json();
+    const request = await authMiddleware(req);
+    if (request instanceof NextResponse) return request;
+
+    const user = (request as any).user;
+    const body = await req.json();
+
     const { id, name, type, chartOfAccountId } = body;
 
-    // ensure the account belongs to this organization
-    const existingAccount = await prisma.account.findUnique({
+    const existing = await prisma.account.findUnique({
       where: { id },
     });
-    if (
-      !existingAccount ||
-      existingAccount.organizationId !== user.organizationId
-    ) {
+
+    if (!existing || existing.organizationId !== user.organizationId) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
@@ -82,14 +91,15 @@ export async function PUT(req: NextRequest) {
       data: {
         name,
         type,
-        chartOfAccount:
-          chartOfAccountId ? { connect: { id: chartOfAccountId } } : undefined,
+        chartOfAccountId: chartOfAccountId ? chartOfAccountId : undefined,
       },
       include: { chartOfAccount: true },
     });
 
     return NextResponse.json(account);
   } catch (err) {
+    console.error("PUT ACCOUNT ERROR:", err);
+
     return NextResponse.json(
       { error: "Failed to update account" },
       { status: 500 },
@@ -97,14 +107,16 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// DELETE account
+// =========================
+// DELETE ACCOUNT
+// =========================
 export async function DELETE(req: NextRequest) {
-  const request = await authMiddleware(req);
-  if (request instanceof NextResponse) return request;
-
-  const user = (request as any).user;
-
   try {
+    const request = await authMiddleware(req);
+    if (request instanceof NextResponse) return request;
+
+    const user = (request as any).user;
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -112,19 +124,22 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "ID is required" }, { status: 400 });
     }
 
-    // ensure the account belongs to this organization
-    const existingAccount = await prisma.account.findUnique({ where: { id } });
-    if (
-      !existingAccount ||
-      existingAccount.organizationId !== user.organizationId
-    ) {
+    const existing = await prisma.account.findUnique({
+      where: { id },
+    });
+
+    if (!existing || existing.organizationId !== user.organizationId) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
-    await prisma.account.delete({ where: { id } });
+    await prisma.account.delete({
+      where: { id },
+    });
 
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (err) {
+    console.error("DELETE ACCOUNT ERROR:", err);
+
     return NextResponse.json(
       { error: "Failed to delete account" },
       { status: 500 },
