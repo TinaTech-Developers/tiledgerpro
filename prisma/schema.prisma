@@ -1,0 +1,365 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id             String               @id @default(uuid())
+  name           String
+  createdAt      DateTime             @default(now())
+  address        String?
+  currency       String               @default("USD")
+  email          String?
+  logoUrl        String?
+  phone          String?
+  prefix         String               @default("INV")
+  taxRate        Float                @default(0.15)
+  accounts       Account[]
+  bills          Bill[]
+  budgets        Budget[]
+  ChartOfAccount ChartOfAccount[]
+  customers      Customer[]
+  expenses       Expense[]
+  ledger         GeneralLedgerEntry[]
+  invoices       Invoice[]
+  memberships    Membership[]
+  payments       Payment[]
+  products       Product[]
+  Quotation      Quotation[]
+  sales          Sale[]
+  transactions   Transaction[]
+  vendors        Vendor[]
+  taxId          String?
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String?
+  email        String        @unique
+  password     String
+  createdAt    DateTime      @default(now())
+  expenses     Expense[]
+  memberships  Membership[]
+  payments     Payment[]
+  sales        Sale[]
+  transactions Transaction[]
+}
+
+model Membership {
+  id             String       @id @default(uuid())
+  userId         String
+  organizationId String
+  createdAt      DateTime     @default(now())
+  role           UserRole
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
+
+  @@unique([userId, organizationId])
+}
+
+model Account {
+  id               String               @id @default(uuid())
+  name             String
+  type             AccountType
+  balance          Float                @default(0)
+  organizationId   String
+  createdAt        DateTime             @default(now())
+  chartOfAccountId String?
+  chartOfAccount   ChartOfAccount?      @relation("ChartAccounts", fields: [chartOfAccountId], references: [id])
+  organization     Organization         @relation(fields: [organizationId], references: [id])
+  budgets          Budget[]             @relation("AccountBudget")
+  expenses         Expense[]            @relation("AccountExpense")
+  generalLedger    GeneralLedgerEntry[] @relation("AccountLedger")
+  transactions     Transaction[]
+}
+
+model GeneralLedgerEntry {
+  id             String       @id @default(uuid())
+  accountId      String
+  transactionId  String
+  organizationId String
+  date           DateTime
+  description    String
+  debit          Float        @default(0)
+  credit         Float        @default(0)
+  balanceAfter   Float
+  account        Account      @relation("AccountLedger", fields: [accountId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  transaction    Transaction  @relation(fields: [transactionId], references: [id])
+}
+
+model Budget {
+  id             String       @id @default(uuid())
+  organizationId String
+  accountId      String
+  year           Int
+  month          Int
+  amount         Float
+  spent          Float        @default(0)
+  createdAt      DateTime     @default(now())
+  account        Account      @relation("AccountBudget", fields: [accountId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model Expense {
+  id             String       @id @default(uuid())
+  organizationId String
+  accountId      String
+  amount         Float
+  category       String
+  notes          String?
+  date           DateTime
+  createdById    String
+  account        Account      @relation("AccountExpense", fields: [accountId], references: [id])
+  createdBy      User         @relation(fields: [createdById], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model ChartOfAccount {
+  id             String          @id @default(uuid())
+  organizationId String
+  name           String
+  code           String?
+  type           AccountCategory
+  description    String?
+  createdAt      DateTime        @default(now())
+  accounts       Account[]       @relation("ChartAccounts")
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+}
+
+model Transaction {
+  id             String               @id @default(uuid())
+  accountId      String
+  amount         Float
+  type           TransactionType
+  category       String?
+  notes          String?
+  createdById    String
+  organizationId String
+  createdAt      DateTime             @default(now())
+  reversedFromId String?
+  status         TransactionStatus    @default(POSTED)
+  updatedAt      DateTime             @updatedAt
+  isLocked       Boolean              @default(false)
+  ledgerEntries  GeneralLedgerEntry[]
+  account        Account              @relation(fields: [accountId], references: [id])
+  createdBy      User                 @relation(fields: [createdById], references: [id])
+  organization   Organization         @relation(fields: [organizationId], references: [id])
+  reversedFrom   Transaction?         @relation("Reversal", fields: [reversedFromId], references: [id])
+  reversals      Transaction[]        @relation("Reversal")
+}
+
+model Product {
+  id             String          @id @default(uuid())
+   sku           String?         @unique
+  name           String
+  description    String?
+  price          Float
+  stock          Int             @default(0)
+  organizationId String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  imageUrl       String?
+  status         String          @default("IN_STOCK")
+  invoiceItems   InvoiceItem[]
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  quotationItems QuotationItem[]
+  saleItems      SaleItem[]
+}
+
+model Sale {
+  id             String        @id @default(uuid())
+  organizationId String
+  totalAmount    Float
+  paymentMethod  PaymentMethod
+  createdById    String
+  createdAt      DateTime      @default(now())
+  createdBy      User          @relation(fields: [createdById], references: [id])
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  saleItems      SaleItem[]
+}
+
+model SaleItem {
+  id        String  @id @default(uuid())
+  saleId    String
+  productId String
+  quantity  Int
+  price     Float
+  product   Product @relation(fields: [productId], references: [id])
+  sale      Sale    @relation(fields: [saleId], references: [id])
+}
+
+model Customer {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  email          String?
+  phone          String?
+  address        String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  invoices       Invoice[]
+  quotations     Quotation[]
+
+  @@index([organizationId])
+  @@index([email])
+}
+
+model Vendor {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  email          String?
+  phone          String?
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  bills          Bill[]
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  customerId     String
+  organizationId String
+  totalAmount    Float
+  status         InvoiceStatus
+  dueDate        DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  customer       Customer      @relation(fields: [customerId], references: [id])
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  invoiceItems   InvoiceItem[]
+  payments       Payment[]
+}
+
+model InvoiceItem {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  productId   String?
+  quantity    Int
+  price       Float
+  description String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  product     Product? @relation(fields: [productId], references: [id])
+}
+
+model Bill {
+  id             String       @id @default(uuid())
+  vendorId       String
+  organizationId String
+  totalAmount    Float
+  status         BillStatus
+  dueDate        DateTime?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  vendor         Vendor       @relation(fields: [vendorId], references: [id])
+  payments       Payment[]
+}
+
+model Payment {
+  id             String       @id @default(uuid())
+  amount         Float
+  date           DateTime     @default(now())
+  organizationId String
+  createdById    String
+  invoiceId      String?
+  billId         String?
+  bill           Bill?        @relation(fields: [billId], references: [id])
+  createdBy      User         @relation(fields: [createdById], references: [id])
+  invoice        Invoice?     @relation(fields: [invoiceId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model Quotation {
+  id             String          @id @default(uuid())
+  customerId     String
+  organizationId String
+  totalAmount    Float
+  status         QuotationStatus
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  customer       Customer        @relation(fields: [customerId], references: [id])
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  quotationItems QuotationItem[]
+}
+
+model QuotationItem {
+  id          String    @id @default(uuid())
+  quotationId String
+  productId   String
+  quantity    Int
+  price       Float
+  product     Product   @relation(fields: [productId], references: [id])
+  quotation   Quotation @relation(fields: [quotationId], references: [id])
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+enum AccountType {
+  CASH
+  BANK
+  MOBILE_MONEY
+  ACCOUNTS_RECEIVABLE
+  ACCOUNTS_PAYABLE
+  EQUITY
+  EXPENSE
+  INCOME
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+}
+
+enum PaymentMethod {
+  CASH
+  BANK
+  MOBILE_MONEY
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIAL
+  OVERDUE
+}
+
+enum BillStatus {
+  DRAFT
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+enum QuotationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TransactionStatus {
+  DRAFT
+  POSTED
+  REVERSED
+  LOCKED
+}
+
+enum AccountCategory {
+  ASSET
+  LIABILITY
+  EQUITY
+  INCOME
+  EXPENSE
+}
