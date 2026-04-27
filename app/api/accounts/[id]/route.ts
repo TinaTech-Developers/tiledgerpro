@@ -6,13 +6,11 @@ import { prisma } from "@/lib/prisma";
 // =========================
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> },
-): Promise<Response> {
+  { params }: { params: { id: string } },
+) {
   try {
-    const { id } = await context.params;
-
     const account = await prisma.account.findUnique({
-      where: { id },
+      where: { id: params.id },
       include: { chartOfAccount: true },
     });
 
@@ -35,13 +33,11 @@ export async function GET(
 // =========================
 export async function DELETE(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> },
-): Promise<Response> {
+  { params }: { params: { id: string } },
+) {
   try {
-    const { id } = await context.params;
-
     await prisma.account.delete({
-      where: { id },
+      where: { id: params.id },
     });
 
     return new NextResponse(null, { status: 204 });
@@ -59,12 +55,10 @@ export async function DELETE(
 // =========================
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> },
-): Promise<Response> {
+  { params }: { params: { id: string } },
+) {
   try {
-    const { id } = await context.params;
     const body = await req.json();
-
     const { name, type, chartOfAccountId } = body;
 
     const data: any = {};
@@ -79,7 +73,7 @@ export async function PATCH(
     }
 
     const account = await prisma.account.update({
-      where: { id },
+      where: { id: params.id },
       data,
       include: { chartOfAccount: true },
     });
@@ -88,7 +82,7 @@ export async function PATCH(
   } catch (err) {
     console.error("PATCH account error:", err);
     return NextResponse.json(
-      { error: "Failed to update account chart of account" },
+      { error: "Failed to update account" },
       { status: 500 },
     );
   }
