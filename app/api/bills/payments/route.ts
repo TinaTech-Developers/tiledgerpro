@@ -1,11 +1,16 @@
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET → Fetch payments for a specific bill
+// =========================
+// GET payments by bill
+// =========================
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const billId = searchParams.get("billId");
+
     if (!billId) {
       return NextResponse.json(
         { error: "billId query parameter is required" },
@@ -25,7 +30,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(payments);
   } catch (err) {
-    console.error(err);
+    console.error("GET PAYMENTS ERROR:", err);
+
     return NextResponse.json(
       { error: "Failed to fetch payments" },
       { status: 500 },
@@ -33,7 +39,9 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST → Record a payment for a bill and create ledger entries
+// =========================
+// POST payment
+// =========================
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -51,14 +59,14 @@ export async function POST(req: NextRequest) {
     const payment = await prisma.payment.create({
       data: {
         billId,
-        amount,
+        amount: Number(amount),
         date: date ? new Date(date) : new Date(),
         organizationId,
         createdById,
       },
     });
 
-    // 2. Get bill
+    // 2. Recalculate bill using UPDATED payments
     const bill = await prisma.bill.findUnique({
       where: { id: billId },
       include: { payments: true },
@@ -68,13 +76,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Bill not found" }, { status: 404 });
     }
 
-    // 3. Calculate total paid
     const totalPaid = bill.payments.reduce(
       (sum, p) => sum + Number(p.amount),
       0,
     );
 
-    // 4. Update status
     let status: "UNPAID" | "PARTIAL" | "PAID" = "UNPAID";
 
     if (totalPaid >= bill.totalAmount) status = "PAID";
@@ -85,7 +91,7 @@ export async function POST(req: NextRequest) {
       data: { status },
     });
 
-    // 5. Ledger entry (cash OUT)
+    // 3. Ledger entry (cash OUT)
     await prisma.generalLedgerEntry.create({
       data: {
         accountId,
@@ -94,7 +100,7 @@ export async function POST(req: NextRequest) {
         date: payment.date,
         description: `Bill payment #${bill.id}`,
         debit: 0,
-        credit: amount,
+        credit: Number(amount),
         balanceAfter: 0,
       },
     });
@@ -105,7 +111,8 @@ export async function POST(req: NextRequest) {
       totalPaid,
     });
   } catch (err) {
-    console.error(err);
+    console.error("POST PAYMENT ERROR:", err);
+
     return NextResponse.json(
       { error: "Failed to record payment" },
       { status: 500 },
