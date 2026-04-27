@@ -1,5 +1,7 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
@@ -7,12 +9,16 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { name, email, password, organizationName } = body;
 
-    // 1. Hash password
+    if (!name || !email || !password || !organizationName) {
+      return NextResponse.json(
+        { success: false, message: "Missing fields" },
+        { status: 400 },
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 2. Create everything in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create user
       const user = await tx.user.create({
         data: {
           name,
@@ -21,14 +27,12 @@ export async function POST(req: Request) {
         },
       });
 
-      // Create organization
       const organization = await tx.organization.create({
         data: {
           name: organizationName,
         },
       });
 
-      // Link user to organization
       await tx.membership.create({
         data: {
           userId: user.id,
@@ -37,7 +41,6 @@ export async function POST(req: Request) {
         },
       });
 
-      // Create default account
       await tx.account.create({
         data: {
           name: "Cash",
@@ -54,7 +57,8 @@ export async function POST(req: Request) {
       data: result,
     });
   } catch (error) {
-    console.error(error);
+    console.error("REGISTER ERROR:", error);
+
     return NextResponse.json(
       { success: false, message: "Something went wrong" },
       { status: 500 },
