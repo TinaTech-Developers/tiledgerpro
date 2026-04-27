@@ -88,7 +88,7 @@ export async function PATCH(
   } catch (err) {
     console.error("PATCH account error:", err);
     return NextResponse.json(
-      { error: "Failed to update account" },
+      { error: "Failed to update account chart of account" },
       { status: 500 },
     );
   }
