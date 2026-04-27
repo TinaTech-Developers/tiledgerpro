@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 // =========================
 // GET account by ID
@@ -7,10 +7,10 @@ import { prisma } from "../../../../lib/prisma";
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
-) {
-  const { id } = await context.params;
-
+): Promise<Response> {
   try {
+    const { id } = await context.params;
+
     const account = await prisma.account.findUnique({
       where: { id },
       include: { chartOfAccount: true },
@@ -22,6 +22,7 @@ export async function GET(
 
     return NextResponse.json(account);
   } catch (err) {
+    console.error("GET account error:", err);
     return NextResponse.json(
       { error: "Failed to fetch account" },
       { status: 500 },
@@ -35,16 +36,17 @@ export async function GET(
 export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
-) {
-  const { id } = await context.params;
-
+): Promise<Response> {
   try {
+    const { id } = await context.params;
+
     await prisma.account.delete({
       where: { id },
     });
 
     return new NextResponse(null, { status: 204 });
   } catch (err) {
+    console.error("DELETE account error:", err);
     return NextResponse.json(
       { error: "Failed to delete account" },
       { status: 500 },
@@ -58,11 +60,11 @@ export async function DELETE(
 export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
-) {
-  const { id } = await context.params;
-
+): Promise<Response> {
   try {
+    const { id } = await context.params;
     const body = await req.json();
+
     const { name, type, chartOfAccountId } = body;
 
     const data: any = {};
@@ -84,6 +86,7 @@ export async function PATCH(
 
     return NextResponse.json(account);
   } catch (err) {
+    console.error("PATCH account error:", err);
     return NextResponse.json(
       { error: "Failed to update account" },
       { status: 500 },
