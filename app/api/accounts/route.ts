@@ -1,32 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authMiddleware } from "@/lib/middleware";
+import { verifyToken } from "@/lib/jwt";
 
 export const runtime = "nodejs";
 
-interface AuthenticatedRequest extends NextRequest {
-  user: { organizationId: string };
+// =========================
+// AUTH HELPER (SAFE FOR VERCEL)
+// =========================
+function getUser(req: NextRequest) {
+  const auth = req.headers.get("authorization");
+
+  if (!auth?.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const token = auth.split(" ")[1];
+  const decoded = verifyToken(token);
+
+  if (!decoded || typeof decoded === "string") {
+    return null;
+  }
+
+  return decoded as {
+    userId: string;
+    organizationId: string;
+  };
 }
 
 // =========================
 // GET ACCOUNTS
 // =========================
 export async function GET(req: NextRequest) {
-  const auth = await authMiddleware(req);
-  if (auth instanceof NextResponse) return auth;
-
-  const user = (auth as AuthenticatedRequest).user;
-
   try {
+    const user = getUser(req);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const accounts = await prisma.account.findMany({
       where: {
         organizationId: user.organizationId,
       },
       include: {
         chartOfAccount: true,
-      },
-      orderBy: {
-        createdAt: "desc",
       },
     });
 
@@ -45,12 +62,13 @@ export async function GET(req: NextRequest) {
 // CREATE ACCOUNT
 // =========================
 export async function POST(req: NextRequest) {
-  const auth = await authMiddleware(req);
-  if (auth instanceof NextResponse) return auth;
-
-  const user = (auth as AuthenticatedRequest).user;
-
   try {
+    const user = getUser(req);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { name, type, chartOfAccountId } = body;
 
@@ -69,14 +87,11 @@ export async function POST(req: NextRequest) {
         organizationId: user.organizationId,
         chartOfAccountId: chartOfAccountId ?? null,
       },
-      include: {
-        chartOfAccount: true,
-      },
     });
 
     return NextResponse.json(account, { status: 201 });
   } catch (err) {
-    console.error("POST account error:", err);
+    console.error("POST accounts error:", err);
 
     return NextResponse.json(
       { error: "Failed to create account" },
