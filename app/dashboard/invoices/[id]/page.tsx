@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../../../lib/prisma";
 import InvoicePrintView from "../components/invoiceprintview";
 
 export default async function Page({ params }: any) {

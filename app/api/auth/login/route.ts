@@ -1,9 +1,9 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
-import { signToken } from "@/lib/jwt";
+import { signToken } from "../../../../lib/jwt";
 
 export async function POST(req: Request) {
   try {

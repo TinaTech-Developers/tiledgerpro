@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/jwt";
+import { prisma } from "../../../lib/prisma";
+import { verifyToken } from "../../../lib/jwt";
 
 export const runtime = "nodejs";
 

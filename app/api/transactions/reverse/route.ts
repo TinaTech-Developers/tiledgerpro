@@ -1,6 +1,6 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../../../lib/prisma";
 import { authMiddleware } from "@/lib/middleware";
 
 export async function POST(req: NextRequest) {
