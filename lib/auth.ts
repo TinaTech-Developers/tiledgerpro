@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "./jwt";
+import { NextRequest } from "next/server";
+import jwt from "jsonwebtoken";
 
 export type AuthUser = {
   userId: string;
@@ -7,6 +7,8 @@ export type AuthUser = {
   email?: string;
   role?: string;
 };
+
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export function getAuthUser(req: NextRequest): AuthUser | null {
   const authHeader = req.headers.get("authorization");
@@ -16,7 +18,7 @@ export function getAuthUser(req: NextRequest): AuthUser | null {
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = verifyToken(token);
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     if (typeof decoded === "string") return null;
 
