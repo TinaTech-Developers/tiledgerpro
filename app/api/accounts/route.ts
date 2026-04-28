@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/jwt";
 
-export const runtime = "nodejs";
-
 // =========================
 // AUTH (SAFE + PURE)
 // =========================
@@ -13,16 +11,17 @@ function getUser(req: NextRequest) {
   if (!auth?.startsWith("Bearer ")) return null;
 
   const token = auth.split(" ")[1];
-  const decoded = verifyToken(token);
 
-  if (!decoded || typeof decoded === "string") return null;
+  try {
+    const decoded = verifyToken(token);
 
-  return decoded as {
-    userId: string;
-    organizationId: string;
-  };
+    if (!decoded || typeof decoded === "string") return null;
+
+    return decoded as any;
+  } catch {
+    return null;
+  }
 }
-
 // =========================
 // GET ACCOUNTS
 // =========================
