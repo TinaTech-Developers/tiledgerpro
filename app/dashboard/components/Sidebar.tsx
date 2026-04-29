@@ -14,9 +14,13 @@ const menu = [
   { name: "Vendors", href: "/dashboard/vendors" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({
+  closeSidebar,
+}: {
+  closeSidebar?: () => void;
+}) {
   return (
-    <aside className="w-64 bg-[#0F172A] text-white flex flex-col">
+    <aside className="w-64 h-screen bg-[#0F172A] text-white flex flex-col">
       {/* Logo */}
       <div className="p-6 text-xl font-bold border-b border-gray-700">
         LedgerPro
@@ -28,6 +32,7 @@ export default function Sidebar() {
           <Link
             key={item.name}
             href={item.href}
+            onClick={closeSidebar}
             className="block px-4 py-2 rounded-lg hover:bg-[#1E293B] transition"
           >
             {item.name}

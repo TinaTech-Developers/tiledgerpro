@@ -4,228 +4,113 @@ import React, { useEffect, useState } from "react";
 import SummaryCard from "./components/SummaryCard";
 import Chart from "./components/Chart";
 import RecentActivity from "./components/RecentActivity";
-import Notifications from "./components/Notifications";
-import { div } from "framer-motion/m";
-
-interface Account {
-  id: string;
-  name: string;
-  balance: number;
-}
-
-interface Invoice {
-  id: string;
-  totalAmount: number;
-  status: string;
-  createdAt: string;
-  dueDate?: string;
-}
-
-interface Bill {
-  id: string;
-  totalAmount: number;
-  status: string;
-  createdAt: string;
-  dueDate?: string;
-}
-
-interface Transaction {
-  id: string;
-  type: string;
-  amount: number;
-  notes: string;
-  createdAt: string;
-}
+import Speedometer from "./components/Speedometer";
 
 export default function DashboardPage() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [bills, setBills] = useState<Bill[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
 
   useEffect(() => {
-    async function fetchData() {
+    async function load() {
       try {
-        const [accRes, invRes, billRes, txnRes] = await Promise.all([
-          fetch("/api/accounts").then((res) => res.json()),
-          fetch("/api/invoices").then((res) => res.json()),
-          fetch("/api/bills").then((res) => res.json()),
-          fetch("/api/transactions").then((res) => res.json()),
+        const [txn, acc] = await Promise.all([
+          fetch("/api/transactions").then((r) => r.json()),
+          fetch("/api/accounts").then((r) => r.json()),
         ]);
 
-        const safeArray = (data: any) => (Array.isArray(data) ? data : []);
-
-        setAccounts(safeArray(accRes));
-        setInvoices(safeArray(invRes));
-        setBills(safeArray(billRes));
-        setTransactions(safeArray(txnRes));
-      } catch (err) {
-        console.error("Dashboard fetch failed", err);
+        setTransactions(Array.isArray(txn) ? txn : []);
+        setAccounts(Array.isArray(acc) ? acc : []);
+      } catch (e) {
+        console.error(e);
       }
     }
-
-    fetchData();
+    load();
   }, []);
 
-  // =====================
-  // 📊 ANALYTICS
-  // =====================
-
+  // ================= DATA =================
   const income = transactions
     .filter((t) => t.type === "CREDIT")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((s, t) => s + t.amount, 0);
 
   const expenses = transactions
     .filter((t) => t.type === "DEBIT")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((s, t) => s + t.amount, 0);
 
-  const netCashFlow = income - expenses;
+  const balance = accounts.reduce((s, a) => s + a.balance, 0);
 
-  const outstandingInvoices = invoices
-    .filter((i) => i.status !== "PAID")
-    .reduce((sum, i) => sum + i.totalAmount, 0);
+  const net = income - expenses;
 
-  const outstandingBills = bills
-    .filter((b) => b.status !== "PAID")
-    .reduce((sum, b) => sum + b.totalAmount, 0);
-
-  // 🚨 OVERDUE LOGIC
-  const today = new Date();
-
-  const overdueInvoices = invoices.filter(
-    (i) =>
-      i.status !== "PAID" && i.createdAt && new Date(i.createdAt) < new Date(),
-  );
-
-  const alerts = overdueInvoices.map((i) => ({
-    id: i.id,
-    message: `Invoice overdue: $${i.totalAmount}`,
-  }));
-
-  const overdueBills = bills.filter(
-    (b) => b.status !== "PAID" && b.dueDate && new Date(b.dueDate) < today,
-  );
-
-  // =====================
-  // 📈 MONTHLY CHART DATA
-  // =====================
-
-  const monthlyData: Record<string, number> = {};
-
+  // monthly chart
+  const monthly: Record<string, number> = {};
   transactions.forEach((t) => {
-    const month = new Date(t.createdAt).toLocaleString("default", {
+    const m = new Date(t.createdAt).toLocaleString("default", {
       month: "short",
     });
-
-    if (!monthlyData[month]) monthlyData[month] = 0;
-    monthlyData[month] += t.amount;
+    monthly[m] = (monthly[m] || 0) + t.amount;
   });
 
-  const chartLabels = Object.keys(monthlyData);
-  const chartValues = Object.values(monthlyData);
+  const labels = Object.keys(monthly);
+  const values = Object.values(monthly);
 
-  // =====================
-  // 📦 KPI TOTALS
-  // =====================
-
-  const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
-
-  // =====================
-  // 🔔 NOTIFICATIONS
-  // =====================
-
-  const notifications = [
-    ...overdueInvoices.map((i) => ({
-      id: i.id,
-      message: `Overdue Invoice: $${i.totalAmount}`,
-      type: "invoice",
-    })),
-    ...overdueBills.map((b) => ({
-      id: b.id,
-      message: `Overdue Bill: $${b.totalAmount}`,
-      type: "bill",
-    })),
-  ];
-
+  // ================= UI =================
   return (
-    <div className="p-6 bg-gray-100 min-h-screen space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <SummaryCard title="Balance" value={`$${totalBalance}`} />
+    <div className="p-4 md:p-6 bg-gray-100 min-h-screen space-y-6">
+      {/* ==== KPI ==== */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <SummaryCard title="Balance" value={`$${balance}`} />
         <SummaryCard title="Income" value={`$${income}`} />
         <SummaryCard title="Expenses" value={`$${expenses}`} />
-        <SummaryCard title="Net Cashflow" value={`$${netCashFlow}`} />
+        <SummaryCard title="Net" value={`$${net}`} />
       </div>
 
-      {/* AR / AP */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SummaryCard
-          title="Outstanding Invoices (AR)"
-          value={`$${outstandingInvoices}`}
-        />
-        <SummaryCard
-          title="Outstanding Bills (AP)"
-          value={`$${outstandingBills}`}
-        />
-      </div>
-
-      {/* Alerts */}
-      {(overdueInvoices.length > 0 || overdueBills.length > 0) && (
-        <div className="bg-red-100 border border-red-300 p-4 rounded-xl">
-          <h2 className="font-bold text-red-700 mb-2">⚠ Alerts</h2>
-          {overdueInvoices.map((i) => (
-            <p className="text-gray-900" key={i.id}>
-              Invoice overdue: ${i.totalAmount}
-            </p>
-          ))}
-          {overdueBills.map((b) => (
-            <p className="text-gray-900" key={b.id}>
-              Bill overdue: ${b.totalAmount}
-            </p>
-          ))}
+      {/* ==== MAIN ==== */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* BIG CHART */}
+        <div className="xl:col-span-2 bg-white rounded-2xl p-4 shadow-sm">
+          <Chart labels={labels} data={values} />
         </div>
-      )}
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Chart
-          labels={chartLabels}
-          data={chartValues}
-          title="Monthly Transactions"
-        />
+        {/* RIGHT SIDE */}
+        <div className="flex flex-col gap-6">
+          {/* Speedometer */}
+          <Speedometer value={net} max={10000} />
 
-        <Chart
-          labels={["Income", "Expenses"]}
-          data={[income, expenses]}
-          title="Income vs Expenses"
-        />
+          {/* Animated Bar Chart */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <Chart
+              labels={["Income", "Expenses"]}
+              data={[income, expenses]}
+              type="bar"
+            />
+          </div>
+
+          {/* Notifications */}
+          <div className="bg-white p-4 rounded-2xl shadow-sm">
+            <h2 className="font-semibold mb-2">Notifications</h2>
+            <p className="text-gray-400 text-sm">No alerts</p>
+          </div>
+        </div>
       </div>
 
-      {/* Notifications Panel */}
-      <div className="bg-white p-4 rounded-xl shadow">
-        <h2 className="font-bold mb-3">🔔 Notifications</h2>
-        {notifications.length === 0 ?
-          <p className="text-gray-500">No alerts</p>
-        : notifications.map((n) => (
-            <div key={n.id} className="border-b py-2 text-sm">
-              {n.message}
-            </div>
-          ))
-        }
-      </div>
+      {/* ==== BOTTOM ==== */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <RecentActivity
+            activities={transactions.map((t) => ({
+              id: t.id,
+              type: t.type,
+              description: t.notes || "Transaction",
+              amount: t.amount,
+              date: t.createdAt,
+            }))}
+          />
+        </div>
 
-      {/* Recent Activity */}
-      <RecentActivity
-        activities={[
-          ...transactions.map((t) => ({
-            id: t.id,
-            type: t.type,
-            description: t.notes,
-            amount: t.amount,
-            date: t.createdAt,
-          })),
-        ]}
-      />
+        <div className="flex flex-col gap-6">
+          <SummaryCard title="Outstanding Invoices" value="$0" />
+          <SummaryCard title="Outstanding Bills" value="$0" />
+        </div>
+      </div>
     </div>
   );
 }

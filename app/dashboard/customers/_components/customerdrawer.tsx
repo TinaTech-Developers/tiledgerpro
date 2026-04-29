@@ -39,7 +39,9 @@ export default function CustomerDrawer({ customer, onClose }: Props) {
                   key={inv.id}
                   className="p-2 border rounded text-sm flex justify-between"
                 >
-                  <span>${inv.amount}</span>
+                  <span className="font-semibold text-gray-700">
+                    ${inv.totalAmount.toFixed(2)}
+                  </span>
                   <span className="text-gray-500">{inv.status}</span>
                 </div>
               ))}

@@ -1,13 +1,14 @@
-// app/dashboard/components/Chart.tsx
 import React from "react";
-import { Line } from "react-chartjs-2";
+import { Line, Bar } from "react-chartjs-2";
+import type { ChartOptions } from "chart.js";
+
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  Title,
+  BarElement,
   Tooltip,
   Legend,
 } from "chart.js";
@@ -17,42 +18,69 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  Title,
+  BarElement,
   Tooltip,
   Legend,
 );
 
-interface ChartProps {
+export default function Chart({
+  labels,
+  data,
+  type = "line",
+}: {
   labels: string[];
   data: number[];
-  title?: string;
-}
-
-export default function Chart({ labels, data, title }: ChartProps) {
-  const chartData = {
+  type?: "line" | "bar";
+}) {
+  const dataset = {
     labels,
     datasets: [
       {
-        label: title || "Dataset",
         data,
-        borderColor: "#1e3a8a", // navy blue
-        backgroundColor: "rgba(30,58,138,0.2)", // semi-transparent navy
-        tension: 0.3,
+        borderColor: "#3B82F6",
+        backgroundColor: "rgba(59,130,246,0.2)",
+        tension: 0.4,
       },
     ],
   };
 
-  const options = {
+  const baseOptions = {
     responsive: true,
+    animation: {
+      duration: 1400,
+      easing: "easeOutQuart" as const,
+    },
     plugins: {
-      legend: { position: "top" as const },
-      title: { display: !!title, text: title },
+      legend: { display: false },
     },
   };
 
-  return (
-    <div className="p-4 bg-white rounded-xl shadow-md">
-      <Line data={chartData} options={options} />
-    </div>
-  );
+  const lineOptions: ChartOptions<"line"> = {
+    ...baseOptions,
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: "#F1F5F9" },
+      },
+      x: {
+        grid: { display: false },
+      },
+    },
+  };
+
+  const barOptions: ChartOptions<"bar"> = {
+    ...baseOptions,
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: "#F1F5F9" },
+      },
+      x: {
+        grid: { display: false },
+      },
+    },
+  };
+  return type === "bar" ?
+      <Bar data={dataset} options={barOptions} />
+    : <Line data={dataset} options={lineOptions} />;
 }

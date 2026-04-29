@@ -1,38 +1,30 @@
-// app/dashboard/components/RecentActivity.tsx
 import React from "react";
 
-interface Activity {
-  id: string;
-  type: string;
-  description: string;
-  amount: number;
-  date: string;
-}
-
-interface RecentActivityProps {
-  activities: Activity[];
-}
-
-export default function RecentActivity({ activities }: RecentActivityProps) {
+export default function RecentActivity({ activities }: any) {
   return (
-    <div className="p-4 bg-white rounded-xl shadow-md">
-      <h2 className="text-lg font-bold text-navyBlue mb-4">Recent Activity</h2>
-      <ul className="divide-y divide-gray-200">
-        {activities.map((act) => (
-          <li key={act.id} className="py-2 flex justify-between items-center">
+    <div className="bg-white p-4 rounded-2xl shadow-sm">
+      <h2 className="font-semibold mb-4 text-gray-700">Recent Activity</h2>
+
+      <div className="space-y-3">
+        {activities.map((a: any) => (
+          <div
+            key={a.id}
+            className="flex justify-between text-sm border-b pb-2"
+          >
             <div>
-              <p className="text-gray-700 font-medium">{act.description}</p>
-              <p className="text-gray-400 text-sm">{act.type}</p>
+              <p className="text-gray-700">{a.description}</p>
+              <p className="text-gray-400">{a.type}</p>
             </div>
-            <div className="text-gray-700 font-semibold">
-              ${act.amount.toLocaleString()}
-              <p className="text-gray-400 text-sm">
-                {new Date(act.date).toLocaleDateString()}
+
+            <div className="text-right">
+              <p className="font-semibold">${a.amount}</p>
+              <p className="text-gray-400 text-xs">
+                {new Date(a.date).toLocaleDateString()}
               </p>
             </div>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
