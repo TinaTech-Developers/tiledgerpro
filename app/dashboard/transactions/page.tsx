@@ -10,7 +10,6 @@ export default function TransactionsPage() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
 
-  // 🔥 FILTER STATE
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -31,7 +30,6 @@ export default function TransactionsPage() {
     fetchData();
   }, []);
 
-  // 🔥 FILTER ENGINE (CLIENT-SIDE)
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
       const matchesSearch =
@@ -52,30 +50,32 @@ export default function TransactionsPage() {
   }, [transactions, search, accountFilter, typeFilter, startDate, endDate]);
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen space-y-6">
+    <div className="p-4 md:p-6 bg-gray-100 min-h-screen space-y-6">
       {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Transactions</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+          Transactions
+        </h1>
 
         <button
           onClick={() => setOpen(true)}
-          className="bg-[#0F172A] text-white px-4 py-2 rounded-lg hover:opacity-90"
+          className="bg-[#0F172A] text-white px-4 py-2 rounded-lg w-full sm:w-auto"
         >
           + New Transaction
         </button>
       </div>
 
-      {/* 🔥 FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border grid grid-cols-1 md:grid-cols-5 gap-3">
+      {/* FILTERS */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <input
-          placeholder="Search notes / account..."
-          className="border p-2 text-gray-600 border-gray-500 rounded"
+          placeholder="Search..."
+          className="border p-2 text-gray-600 rounded"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
         <select
-          className="border p-2 text-gray-600 border-gray-500  rounded"
+          className="border p-2 text-gray-600 rounded"
           value={accountFilter}
           onChange={(e) => setAccountFilter(e.target.value)}
         >
@@ -88,7 +88,7 @@ export default function TransactionsPage() {
         </select>
 
         <select
-          className="border p-2 text-gray-600 border-gray-500  rounded"
+          className="border p-2 text-gray-600 rounded"
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
         >
@@ -99,14 +99,14 @@ export default function TransactionsPage() {
 
         <input
           type="date"
-          className="border p-2 text-gray-600 border-gray-500  rounded"
+          className="border p-2 text-gray-600 rounded"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
         />
 
         <input
           type="date"
-          className="border p-2 text-gray-600 border-gray-500  rounded"
+          className="border p-2 text-gray-600 rounded"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
         />

@@ -127,10 +127,10 @@ export default function TransactionModal({
   // UI
   //////////////////////////////////////////////////////
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-      <div className="bg-white w-full max-w-5xl p-6 rounded-xl space-y-4 shadow-xl">
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center p-3">
+      <div className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-xl space-y-4 shadow-xl">
+        {" "}
         <h2 className="text-xl font-bold text-gray-800">Journal Entry</h2>
-
         {/* Description */}
         <input
           placeholder="Description"
@@ -138,7 +138,6 @@ export default function TransactionModal({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-
         {/* Table Header */}
         <div className="grid grid-cols-4 font-semibold text-gray-600 border-b pb-2">
           <span>Account</span>
@@ -146,7 +145,6 @@ export default function TransactionModal({
           <span>Credit</span>
           <span></span>
         </div>
-
         {/* Rows */}
         {entries.map((e, i) => (
           <div key={i} className="grid grid-cols-4 gap-2 items-center">
@@ -185,7 +183,6 @@ export default function TransactionModal({
             </button>
           </div>
         ))}
-
         {/* Totals */}
         <div className="flex justify-between bg-gray-100 p-3 rounded">
           <div className="text-green-600">
@@ -195,7 +192,6 @@ export default function TransactionModal({
             Credit: ${totalCredit.toLocaleString()}
           </div>
         </div>
-
         {/* Status */}
         <div
           className={`text-sm font-medium ${
@@ -204,7 +200,6 @@ export default function TransactionModal({
         >
           {isBalanced ? "Balanced ✓" : `Difference: $${Math.abs(difference)}`}
         </div>
-
         {/* Actions */}
         <div className="flex justify-between">
           <div className="space-x-3">
