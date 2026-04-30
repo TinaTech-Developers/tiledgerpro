@@ -151,6 +151,9 @@ model Transaction {
   organization   Organization         @relation(fields: [organizationId], references: [id])
   reversedFrom   Transaction?         @relation("Reversal", fields: [reversedFromId], references: [id])
   reversals      Transaction[]        @relation("Reversal")
+
+  referenceType  String? // "invoice", "bill", "expense"
+  referenceId    String?
 }
 
 model Product {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 import { verifyToken } from "../../../lib/jwt";
+import { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -34,12 +35,43 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const accounts = await prisma.account.findMany({
-      where: { organizationId: user.organizationId },
-      include: { chartOfAccount: true },
-    });
+    const { searchParams } = new URL(req.url);
 
-    return NextResponse.json(accounts);
+    const page = Number(searchParams.get("page") || 1);
+    const limit = Number(searchParams.get("limit") || 10);
+    const search = searchParams.get("search") || "";
+
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.AccountWhereInput = {
+      organizationId: user.organizationId,
+      ...(search ?
+        {
+          name: {
+            contains: search,
+            mode: Prisma.QueryMode.insensitive,
+          },
+        }
+      : {}),
+    };
+
+    const [accounts, total] = await Promise.all([
+      prisma.account.findMany({
+        where,
+        skip,
+        take: limit,
+        include: { chartOfAccount: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.account.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      accounts,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (err) {
     console.error("GET ACCOUNTS ERROR:", err);
     return NextResponse.json(

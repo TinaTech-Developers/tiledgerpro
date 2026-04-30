@@ -6,77 +6,107 @@ import Chart from "./components/Chart";
 import RecentActivity from "./components/RecentActivity";
 import Speedometer from "./components/Speedometer";
 
+type Analytics = {
+  income: number;
+  expenses: number;
+  net: number;
+  expenseRatio: number;
+
+  monthly: Record<string, number>;
+  categories: Record<string, number>;
+
+  outstandingInvoices: number;
+  outstandingBills: number;
+};
+
+type Transaction = {
+  id: string;
+  type: "DEBIT" | "CREDIT";
+  amount: number;
+  notes?: string;
+  category?: string;
+  createdAt: string;
+};
+
 export default function DashboardPage() {
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
     async function load() {
       try {
-        const [txn, acc] = await Promise.all([
-          fetch("/api/transactions").then((r) => r.json()),
-          fetch("/api/accounts").then((r) => r.json()),
+        const [analyticsRes, txnRes] = await Promise.all([
+          fetch("/api/analytics"),
+          fetch("/api/transactions"),
         ]);
 
-        setTransactions(Array.isArray(txn) ? txn : []);
-        setAccounts(Array.isArray(acc) ? acc : []);
+        const analyticsData: Analytics = await analyticsRes.json();
+        const txnData: Transaction[] = await txnRes.json();
+
+        setAnalytics(analyticsData);
+        setTransactions(Array.isArray(txnData) ? txnData : []);
       } catch (e) {
-        console.error(e);
+        console.error("Dashboard load error:", e);
       }
     }
+
     load();
   }, []);
 
-  // ================= DATA =================
-  const income = transactions
-    .filter((t) => t.type === "CREDIT")
-    .reduce((s, t) => s + t.amount, 0);
+  // ⛔ prevent render before data
+  if (!analytics) {
+    return <div className="p-6">Loading dashboard...</div>;
+  }
 
-  const expenses = transactions
-    .filter((t) => t.type === "DEBIT")
-    .reduce((s, t) => s + t.amount, 0);
+  // ================= SAFE DATA =================
+  const income = Number(analytics.income || 0);
+  const expenses = Number(analytics.expenses || 0);
+  const net = Number(analytics.net || 0);
+  const expenseRatio = Number(analytics.expenseRatio || 0);
 
-  const balance = accounts.reduce((s, a) => s + a.balance, 0);
+  const outstandingInvoices = Number(analytics.outstandingInvoices || 0);
+  const outstandingBills = Number(analytics.outstandingBills || 0);
 
-  const net = income - expenses;
+  const labels = Object.keys(analytics.monthly || {});
+  const values = Object.values(analytics.monthly || {});
 
-  // monthly chart
-  const monthly: Record<string, number> = {};
-  transactions.forEach((t) => {
-    const m = new Date(t.createdAt).toLocaleString("default", {
-      month: "short",
-    });
-    monthly[m] = (monthly[m] || 0) + t.amount;
-  });
+  const expenseLabels = Object.keys(analytics.categories || {});
+  const expenseValues = Object.values(analytics.categories || {});
 
-  const labels = Object.keys(monthly);
-  const values = Object.values(monthly);
+  const topCategory =
+    expenseLabels.length > 0 ?
+      expenseLabels[expenseValues.indexOf(Math.max(...expenseValues))]
+    : "None";
 
-  // ================= UI =================
   return (
     <div className="p-4 md:p-6 bg-gray-100 min-h-screen space-y-6">
-      {/* ==== KPI ==== */}
+      {/* KPI */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <SummaryCard title="Balance" value={`$${balance}`} />
-        <SummaryCard title="Income" value={`$${income}`} />
-        <SummaryCard title="Expenses" value={`$${expenses}`} />
-        <SummaryCard title="Net" value={`$${net}`} />
+        <SummaryCard title="Income" value={`$${income.toLocaleString()}`} />
+        <SummaryCard title="Expenses" value={`$${expenses.toLocaleString()}`} />
+        <SummaryCard title="Net Profit" value={`$${net.toLocaleString()}`} />
+        <SummaryCard
+          title="Expense Ratio"
+          value={`${expenseRatio.toFixed(1)}%`}
+        />
       </div>
 
-      {/* ==== MAIN ==== */}
+      {/* MAIN */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* BIG CHART */}
         <div className="xl:col-span-2 bg-white rounded-2xl p-4 shadow-sm">
+          <h2 className="font-semibold mb-3 text-gray-700">
+            Monthly Transactions
+          </h2>
           <Chart labels={labels} data={values} />
         </div>
 
-        {/* RIGHT SIDE */}
         <div className="flex flex-col gap-6">
-          {/* Speedometer */}
-          <Speedometer value={net} max={10000} />
+          <Speedometer value={expenseRatio} />
 
-          {/* Animated Bar Chart */}
           <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <h2 className="font-semibold mb-3 text-gray-700">
+              Income vs Expenses
+            </h2>
             <Chart
               labels={["Income", "Expenses"]}
               data={[income, expenses]}
@@ -84,22 +114,23 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Notifications */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm">
-            <h2 className="font-semibold mb-2">Notifications</h2>
-            <p className="text-gray-400 text-sm">No alerts</p>
+          <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <h2 className="font-semibold mb-3 text-gray-700">
+              Expense Categories
+            </h2>
+            <Chart labels={expenseLabels} data={expenseValues} type="bar" />
           </div>
         </div>
       </div>
 
-      {/* ==== BOTTOM ==== */}
+      {/* BOTTOM */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
           <RecentActivity
             activities={transactions.map((t) => ({
               id: t.id,
               type: t.type,
-              description: t.notes || "Transaction",
+              description: t.notes || t.category || "Transaction",
               amount: t.amount,
               date: t.createdAt,
             }))}
@@ -107,8 +138,15 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <SummaryCard title="Outstanding Invoices" value="$0" />
-          <SummaryCard title="Outstanding Bills" value="$0" />
+          <SummaryCard
+            title="Outstanding Invoices"
+            value={`$${outstandingInvoices.toLocaleString()}`}
+          />
+          <SummaryCard
+            title="Outstanding Bills"
+            value={`$${outstandingBills.toLocaleString()}`}
+          />
+          <SummaryCard title="Top Category" value={topCategory} />
         </div>
       </div>
     </div>

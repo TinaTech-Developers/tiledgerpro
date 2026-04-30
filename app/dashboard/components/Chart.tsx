@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Line, Bar } from "react-chartjs-2";
 import type { ChartOptions } from "chart.js";
@@ -55,32 +57,11 @@ export default function Chart({
     },
   };
 
-  const lineOptions: ChartOptions<"line"> = {
-    ...baseOptions,
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: { color: "#F1F5F9" },
-      },
-      x: {
-        grid: { display: false },
-      },
-    },
-  };
+  if (type === "bar") {
+    const barOptions = baseOptions as ChartOptions<"bar">;
+    return <Bar data={dataset} options={barOptions} />;
+  }
 
-  const barOptions: ChartOptions<"bar"> = {
-    ...baseOptions,
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: { color: "#F1F5F9" },
-      },
-      x: {
-        grid: { display: false },
-      },
-    },
-  };
-  return type === "bar" ?
-      <Bar data={dataset} options={barOptions} />
-    : <Line data={dataset} options={lineOptions} />;
+  const lineOptions = baseOptions as ChartOptions<"line">;
+  return <Line data={dataset} options={lineOptions} />;
 }
