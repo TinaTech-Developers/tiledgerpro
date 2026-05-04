@@ -19,7 +19,6 @@ export default function QuotationsPage() {
     apiFetch("/api/quotations").then(setData);
   }, []);
 
-  // ================= FILTER ENGINE =================
   const filtered = useMemo(() => {
     return data
       .filter((q) => {
@@ -43,8 +42,8 @@ export default function QuotationsPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6 bg-gray-50 min-h-screen">
-      {/* ================= HEADER ================= */}
-      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-gray-800">
             Quotations
@@ -54,16 +53,15 @@ export default function QuotationsPage() {
 
         <button
           onClick={() => router.push("/dashboard/quotations/new")}
-          className="bg-black text-white px-4 py-2 rounded w-full md:w-auto"
+          className="bg-black text-white px-4 py-2 rounded w-full sm:w-auto"
         >
           + New Quotation
         </button>
       </div>
 
-      {/* ================= FILTERS ================= */}
+      {/* FILTERS */}
       <div className="bg-white p-4 rounded-xl shadow-sm border">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {/* SEARCH */}
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -71,7 +69,6 @@ export default function QuotationsPage() {
             className="border p-2 rounded text-sm w-full text-gray-600 border-gray-300"
           />
 
-          {/* STATUS */}
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
@@ -83,7 +80,6 @@ export default function QuotationsPage() {
             <option value="REJECTED">Rejected</option>
           </select>
 
-          {/* SORT */}
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
@@ -93,7 +89,6 @@ export default function QuotationsPage() {
             <option value="asc">Lowest Amount</option>
           </select>
 
-          {/* DATE START */}
           <input
             type="date"
             value={startDate}
@@ -101,7 +96,6 @@ export default function QuotationsPage() {
             className="border p-2 rounded text-sm w-full text-gray-600 border-gray-300"
           />
 
-          {/* DATE END */}
           <input
             type="date"
             value={endDate}
@@ -111,12 +105,12 @@ export default function QuotationsPage() {
         </div>
       </div>
 
-      {/* ================= TABLE ================= */}
+      {/* TABLE WRAPPER */}
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
         <QuotationTable data={filtered} />
       </div>
 
-      {/* ================= STATS ================= */}
+      {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-xl border">
           <p className="text-sm text-gray-500">Total</p>
