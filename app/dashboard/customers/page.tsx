@@ -34,13 +34,14 @@ export default function CustomersPage() {
   }, []);
 
   return (
-    <div className="p-6 space-y-6 bg-gray-100 min-h-screen">
-      <div className="flex justify-between">
-        <h1 className="text-2xl font-bold">Customers</h1>
+    <div className="p-4 md:p-6 space-y-6 bg-gray-100 min-h-screen">
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h1 className="text-xl md:text-2xl font-bold">Customers</h1>
 
         <button
           onClick={() => setOpen(true)}
-          className="bg-[#0F172A] text-white px-4 py-2 rounded-lg"
+          className="bg-[#0F172A] text-white px-4 py-2 rounded-lg w-full sm:w-auto"
         >
           + New Customer
         </button>
@@ -62,12 +63,14 @@ export default function CustomersPage() {
         setFilter={setFilter}
       />
 
-      {/* TABLE */}
-      <CustomerTable
-        customers={customers}
-        onSelect={setSelected}
-        onEdit={() => setOpen(true)}
-      />
+      {/* TABLE WRAPPER */}
+      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+        <CustomerTable
+          customers={customers}
+          onSelect={setSelected}
+          onEdit={() => setOpen(true)}
+        />
+      </div>
 
       {/* MODAL */}
       {open && (
