@@ -20,7 +20,7 @@ const menu = [
       { name: "Customers", href: "/dashboard/customers" },
       { name: "Invoices", href: "/dashboard/invoices" },
       { name: "Payments", href: "/dashboard/payments" },
-      { name: "Quotations", href: "/dashboard/quotes" },
+      { name: "Quotations", href: "/dashboard/quotations" },
     ],
   },
 
