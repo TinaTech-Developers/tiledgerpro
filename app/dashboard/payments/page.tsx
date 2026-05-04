@@ -14,6 +14,17 @@ export default function PaymentsPage() {
 
   const organizationId = "dec771e0-60bb-478e-86a0-9bf2f5bb2636";
 
+  const normalize = (res: any) => {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res.data)) return res.data;
+    if (Array.isArray(res.payments)) return res.payments;
+    if (Array.isArray(res.invoices)) return res.invoices;
+    if (Array.isArray(res.bills)) return res.bills;
+    if (Array.isArray(res.accounts)) return res.accounts;
+    return [];
+  };
+
   const fetchData = async () => {
     const [payRes, invRes, billRes, accRes] = await Promise.allSettled([
       apiFetch(`/api/payments?organizationId=${organizationId}`),
@@ -22,12 +33,11 @@ export default function PaymentsPage() {
       apiFetch(`/api/accounts?organizationId=${organizationId}`),
     ]);
 
-    setPayments(payRes.status === "fulfilled" ? payRes.value : []);
-    setInvoices(invRes.status === "fulfilled" ? invRes.value : []);
-    setBills(billRes.status === "fulfilled" ? billRes.value : []);
-    setAccounts(accRes.status === "fulfilled" ? accRes.value : []);
+    setPayments(payRes.status === "fulfilled" ? normalize(payRes.value) : []);
+    setInvoices(invRes.status === "fulfilled" ? normalize(invRes.value) : []);
+    setBills(billRes.status === "fulfilled" ? normalize(billRes.value) : []);
+    setAccounts(accRes.status === "fulfilled" ? normalize(accRes.value) : []);
   };
-
   useEffect(() => {
     fetchData();
   }, []);
