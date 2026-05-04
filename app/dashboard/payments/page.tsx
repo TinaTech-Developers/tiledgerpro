@@ -113,49 +113,89 @@ export default function PaymentsPage() {
       </div>
 
       {/* TABLE WRAPPER (IMPORTANT FIX) */}
-      <div className="bg-white rounded-xl shadow overflow-x-auto">
-        <table className="w-full min-w-[600px] text-sm">
-          <thead className="bg-gray-50 text-gray-500">
-            <tr>
-              <th className="p-3 text-left">Date</th>
-              <th className="p-3 text-left">Type</th>
-              <th className="p-3 text-left">Reference</th>
-              <th className="p-3 text-right">Amount</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredPayments.map((p) => (
-              <tr key={p.id} className="border-t hover:bg-gray-50">
-                <td className="p-3 text-gray-700 whitespace-nowrap">
-                  {p.date ? new Date(p.date).toLocaleDateString() : "—"}
-                </td>
-
-                <td className="p-3">
-                  {p.invoiceId ?
-                    <span className="text-green-600 font-medium">INCOME</span>
-                  : <span className="text-red-600 font-medium">EXPENSE</span>}
-                </td>
-
-                <td className="p-3 text-gray-700 truncate max-w-[150px]">
-                  {p.invoice?.invoiceNumber || p.bill?.id || "—"}
-                </td>
-
-                <td className="p-3 text-right font-semibold">
-                  ${Number(p.amount || 0).toFixed(2)}
-                </td>
-              </tr>
-            ))}
-
-            {filteredPayments.length === 0 && (
+      {/* TABLE WRAPPER */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        {/* ================= DESKTOP TABLE ================= */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-gray-500">
               <tr>
-                <td colSpan={4} className="text-center p-6 text-gray-500">
-                  No payments found
-                </td>
+                <th className="p-3 text-left">Date</th>
+                <th className="p-3 text-left">Type</th>
+                <th className="p-3 text-left">Reference</th>
+                <th className="p-3 text-right">Amount</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {filteredPayments.map((p) => (
+                <tr key={p.id} className="border-t hover:bg-gray-50">
+                  <td className="p-3 text-gray-700">
+                    {p.date ? new Date(p.date).toLocaleDateString() : "—"}
+                  </td>
+
+                  <td className="p-3">
+                    {p.invoiceId ?
+                      <span className="text-green-600 font-medium">INCOME</span>
+                    : <span className="text-red-600 font-medium">EXPENSE</span>}
+                  </td>
+
+                  <td className="p-3 text-gray-700">
+                    {p.invoice?.invoiceNumber || p.bill?.id || "—"}
+                  </td>
+
+                  <td className="p-3 text-right font-semibold">
+                    ${Number(p.amount || 0).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+
+              {filteredPayments.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="text-center p-6 text-gray-500">
+                    No payments found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ================= MOBILE CARDS ================= */}
+        <div className="md:hidden divide-y">
+          {filteredPayments.map((p) => (
+            <div key={p.id} className="p-4 space-y-2">
+              <div className="flex justify-between">
+                <p className="text-sm text-gray-500">
+                  {p.date ? new Date(p.date).toLocaleDateString() : "—"}
+                </p>
+
+                {p.invoiceId ?
+                  <span className="text-green-600 text-xs font-medium">
+                    INCOME
+                  </span>
+                : <span className="text-red-600 text-xs font-medium">
+                    EXPENSE
+                  </span>
+                }
+              </div>
+
+              <p className="text-gray-700 font-medium">
+                {p.invoice?.invoiceNumber || p.bill?.id || "No reference"}
+              </p>
+
+              <p className="text-right font-bold text-gray-800">
+                ${Number(p.amount || 0).toFixed(2)}
+              </p>
+            </div>
+          ))}
+
+          {filteredPayments.length === 0 && (
+            <div className="p-6 text-center text-gray-500">
+              No payments found
+            </div>
+          )}
+        </div>
       </div>
 
       {/* MODAL */}
