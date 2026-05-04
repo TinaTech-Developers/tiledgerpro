@@ -49,54 +49,52 @@ export default function PaymentsPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6 bg-gray-100 min-h-screen">
-      {/* ================= HEADER ================= */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-800">
-          Payments
-        </h1>
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+        <h1 className="text-2xl font-bold text-gray-800">Payments</h1>
 
         <button
           onClick={() => setOpen(true)}
-          className="w-full sm:w-auto bg-black text-white px-4 py-2 rounded-lg"
+          className="bg-black text-white px-4 py-2 rounded-lg w-full md:w-auto"
         >
           + New Payment
         </button>
       </div>
 
-      {/* ================= STATS ================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+      {/* STATS (RESPONSIVE FIX) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-xl shadow">
-          <p className="text-gray-500 text-sm">Income</p>
-          <p className="text-green-600 text-lg md:text-xl font-bold">
+          <p className="text-gray-500">Income</p>
+          <p className="text-green-600 text-xl font-bold">
             ${income.toFixed(2)}
           </p>
         </div>
 
         <div className="bg-white p-4 rounded-xl shadow">
-          <p className="text-gray-500 text-sm">Expenses</p>
-          <p className="text-red-600 text-lg md:text-xl font-bold">
+          <p className="text-gray-500">Expenses</p>
+          <p className="text-red-600 text-xl font-bold">
             ${expense.toFixed(2)}
           </p>
         </div>
 
         <div className="bg-white p-4 rounded-xl shadow">
-          <p className="text-gray-500 text-sm">Net</p>
-          <p className="text-lg md:text-xl font-bold text-amber-600">
+          <p className="text-gray-500">Net</p>
+          <p className="text-xl font-bold text-amber-600">
             ${(income - expense).toFixed(2)}
           </p>
         </div>
       </div>
 
-      {/* ================= FILTERS ================= */}
+      {/* FILTERS (STACK ON MOBILE) */}
       <div className="flex flex-wrap gap-2">
         {["ALL", "INCOME", "EXPENSE"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f as any)}
-            className={`px-3 py-1 rounded text-sm border ${
+            className={`px-3 py-1 rounded text-sm ${
               filter === f ?
                 "bg-black text-white"
-              : "bg-white text-gray-700 hover:bg-gray-50"
+              : "bg-white text-gray-700 border"
             }`}
           >
             {f}
@@ -104,9 +102,9 @@ export default function PaymentsPage() {
         ))}
       </div>
 
-      {/* ================= TABLE ================= */}
-      <div className="bg-white rounded-xl shadow border overflow-x-auto">
-        <table className="w-full min-w-[700px] text-sm">
+      {/* TABLE WRAPPER (IMPORTANT FIX) */}
+      <div className="bg-white rounded-xl shadow overflow-x-auto">
+        <table className="w-full min-w-[600px] text-sm">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
               <th className="p-3 text-left">Date</th>
@@ -119,7 +117,7 @@ export default function PaymentsPage() {
           <tbody>
             {filteredPayments.map((p) => (
               <tr key={p.id} className="border-t hover:bg-gray-50">
-                <td className="p-3 text-gray-700">
+                <td className="p-3 text-gray-700 whitespace-nowrap">
                   {p.date ? new Date(p.date).toLocaleDateString() : "—"}
                 </td>
 
@@ -129,11 +127,11 @@ export default function PaymentsPage() {
                   : <span className="text-red-600 font-medium">EXPENSE</span>}
                 </td>
 
-                <td className="p-3 text-gray-700">
+                <td className="p-3 text-gray-700 truncate max-w-[150px]">
                   {p.invoice?.invoiceNumber || p.bill?.id || "—"}
                 </td>
 
-                <td className="p-3 text-right font-semibold text-gray-700">
+                <td className="p-3 text-right font-semibold">
                   ${Number(p.amount || 0).toFixed(2)}
                 </td>
               </tr>
@@ -150,7 +148,7 @@ export default function PaymentsPage() {
         </table>
       </div>
 
-      {/* ================= MODAL ================= */}
+      {/* MODAL */}
       {open && (
         <PaymentModal
           invoices={invoices}
