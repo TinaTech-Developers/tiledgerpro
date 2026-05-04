@@ -14,7 +14,7 @@ export default function QuotationPreview({ quotation }: any) {
   return (
     <div
       id="pdf"
-      className="bg-white text-sm mx-auto shadow"
+      className="bg-white text-sm shadow"
       style={{
         width: "210mm",
         minHeight: "297mm",

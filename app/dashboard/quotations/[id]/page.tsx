@@ -9,41 +9,40 @@ import { downloadPDF } from "@/lib/downloadPDF";
 export default function QuotationViewPage() {
   const { id } = useParams();
   const [quotation, setQuotation] = useState<any>(null);
-  const [scale, setScale] = useState(1);
+  const [zoom, setZoom] = useState(100);
 
   useEffect(() => {
     if (!id) return;
 
     apiFetch(`/api/quotations?id=${id}`).then((data) => {
-      if (data?.error) return;
-      setQuotation(data);
+      if (!data?.error) setQuotation(data);
     });
   }, [id]);
 
   if (!quotation) return <p className="p-6">Loading...</p>;
 
   return (
-    <div className="p-4 md:p-6 space-y-4 bg-gray-100 min-h-screen">
-      {/* ACTIONS */}
+    <div className="p-3 md:p-6 bg-gray-100 min-h-screen space-y-4">
+      {/* ================= ACTION BAR ================= */}
       <div className="flex flex-col sm:flex-row justify-end gap-3">
-        {/* ZOOM CONTROLS */}
-        <div className="flex gap-2">
+        {/* ZOOM (ONLY ON DESKTOP) */}
+        <div className="hidden md:flex gap-2">
           <button
-            onClick={() => setScale((s) => Math.max(0.5, s - 0.1))}
+            onClick={() => setZoom((z) => Math.max(60, z - 10))}
             className="px-3 py-1 border rounded bg-white"
           >
             -
           </button>
 
           <button
-            onClick={() => setScale(1)}
+            onClick={() => setZoom(100)}
             className="px-3 py-1 border rounded bg-white"
           >
             Reset
           </button>
 
           <button
-            onClick={() => setScale((s) => Math.min(1.5, s + 0.1))}
+            onClick={() => setZoom((z) => Math.min(140, z + 10))}
             className="px-3 py-1 border rounded bg-white"
           >
             +
@@ -58,14 +57,22 @@ export default function QuotationViewPage() {
         </button>
       </div>
 
-      {/* SCROLLABLE + ZOOMABLE A4 WRAPPER */}
-      <div className="w-full overflow-auto border rounded-lg bg-gray-200 p-4">
+      {/* ================= VIEWER ================= */}
+
+      {/* MOBILE: scroll mode */}
+      <div className="block md:hidden overflow-auto bg-white rounded-lg shadow">
+        <div className="min-w-[210mm]">
+          <QuotationPreview quotation={quotation} />
+        </div>
+      </div>
+
+      {/* DESKTOP: centered A4 */}
+      <div className="hidden md:flex justify-center">
         <div
           style={{
-            transform: `scale(${scale})`,
+            transform: `scale(${zoom / 100})`,
             transformOrigin: "top center",
           }}
-          className="w-max mx-auto"
         >
           <QuotationPreview quotation={quotation} />
         </div>
