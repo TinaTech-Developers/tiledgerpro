@@ -136,7 +136,7 @@ export default function InvoiceModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 m-2">
       <div className="bg-white w-full max-w-6xl p-6 rounded-2xl shadow-xl space-y-6">
         {/* HEADER */}
         <div className="flex justify-between items-center">
