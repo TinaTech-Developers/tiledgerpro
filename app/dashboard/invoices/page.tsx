@@ -11,9 +11,9 @@ export default function InvoicesPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
 
-  const organizationId = "dec771e0-60bb-478e-86a0-9bf2f5bb2636";
+  const [loading, setLoading] = useState(false);
 
-  const [loading, setLoading] = useState(true);
+  const organizationId = "dec771e0-60bb-478e-86a0-9bf2f5bb2636";
 
   const fetchData = async () => {
     try {
@@ -25,19 +25,25 @@ export default function InvoicesPage() {
         apiFetch(`/api/products?organizationId=${organizationId}`),
       ]);
 
-      if (invRes.status === "fulfilled") {
-        setInvoices(Array.isArray(invRes.value) ? invRes.value : []);
-      }
+      setInvoices(
+        invRes.status === "fulfilled" && Array.isArray(invRes.value) ?
+          invRes.value
+        : [],
+      );
 
-      if (custRes.status === "fulfilled") {
-        setCustomers(Array.isArray(custRes.value) ? custRes.value : []);
-      }
+      setCustomers(
+        custRes.status === "fulfilled" && Array.isArray(custRes.value) ?
+          custRes.value
+        : [],
+      );
 
-      if (prodRes.status === "fulfilled") {
-        setProducts(Array.isArray(prodRes.value) ? prodRes.value : []);
-      }
+      setProducts(
+        prodRes.status === "fulfilled" && Array.isArray(prodRes.value) ?
+          prodRes.value
+        : [],
+      );
     } catch (err) {
-      console.error(err);
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -46,6 +52,7 @@ export default function InvoicesPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
   useEffect(() => {
     console.log("Customers:", customers);
     console.log("Products:", products);
@@ -61,15 +68,15 @@ export default function InvoicesPage() {
 
         <button
           onClick={() => setOpen(true)}
-          disabled={loading || customers.length === 0 || products.length === 0}
+          disabled={loading}
           className="w-full sm:w-auto bg-[#0F172A] text-white px-4 py-2 rounded-lg disabled:opacity-50"
         >
           {loading ? "Loading..." : "+ New Invoice"}
         </button>
       </div>
 
-      {/* TABLE WRAPPER (IMPORTANT FOR MOBILE SCROLL) */}
-      <div className="bg-white rounded-xl shadow border">
+      {/* TABLE WRAPPER */}
+      <div className="bg-white rounded-xl shadow border overflow-x-auto">
         <InvoiceTable invoices={invoices} />
       </div>
 

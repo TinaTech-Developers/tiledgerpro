@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type Invoice = {
   id: string;
@@ -29,8 +30,62 @@ function getStatusStyle(status: Invoice["status"]) {
 }
 
 export default function InvoiceTable({ invoices }: Props) {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "DRAFT" | "SENT" | "PAID" | "OVERDUE"
+  >("ALL");
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 🔍 FILTER LOGIC
+  const filteredInvoices = invoices.filter((inv) => {
+    const invoiceNumber = inv.invoiceNumber ?? "";
+    const customerName = inv.customer?.name ?? "";
+
+    const matchesSearch =
+      invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
+      customerName.toLowerCase().includes(search.toLowerCase());
+
+    const matchesStatus = statusFilter === "ALL" || inv.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="bg-white rounded-xl shadow border overflow-hidden">
+      {/* ================= FILTERS ================= */}
+      <div className="p-4 border-b space-y-3">
+        {/* SEARCH */}
+        <input
+          type="text"
+          placeholder="Search invoice or customer..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full border border-gray-300 text-gray-700 p-2 rounded-lg text-sm"
+        />
+
+        {/* STATUS FILTER */}
+        <div className="flex flex-wrap gap-2">
+          {["ALL", "DRAFT", "SENT", "PAID", "OVERDUE"].map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s as any)}
+              className={`px-3 py-1 rounded text-xs transition ${
+                statusFilter === s ?
+                  "bg-black text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ================= DESKTOP TABLE ================= */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
@@ -46,13 +101,13 @@ export default function InvoiceTable({ invoices }: Props) {
           </thead>
 
           <tbody>
-            {invoices.map((inv) => (
+            {filteredInvoices.map((inv) => (
               <tr key={inv.id} className="border-t hover:bg-gray-50 transition">
-                <td className="p-4 font-medium text-gray-800">
-                  {inv.invoiceNumber}
+                <td className="p-4 font-medium text-gray-800 ">
+                  #00{inv.id.slice(0, 8).toUpperCase()}
                 </td>
 
-                <td className="p-4 text-gray-700">
+                <td className="p-4 text-gray-700 whitespace-nowrap">
                   {new Date(inv.createdAt).toLocaleDateString()}
                 </td>
 
@@ -74,7 +129,7 @@ export default function InvoiceTable({ invoices }: Props) {
                   </span>
                 </td>
 
-                <td className="p-4 text-right space-x-2">
+                <td className="p-4 text-right space-x-3">
                   <Link
                     href={`/dashboard/invoices/${inv.id}`}
                     className="text-blue-600 text-xs hover:underline"
@@ -89,10 +144,10 @@ export default function InvoiceTable({ invoices }: Props) {
               </tr>
             ))}
 
-            {invoices.length === 0 && (
+            {filteredInvoices.length === 0 && (
               <tr>
                 <td colSpan={6} className="text-center p-6 text-gray-500">
-                  No invoices yet
+                  No matching invoices
                 </td>
               </tr>
             )}
@@ -102,7 +157,7 @@ export default function InvoiceTable({ invoices }: Props) {
 
       {/* ================= MOBILE CARDS ================= */}
       <div className="md:hidden divide-y">
-        {invoices.map((inv) => (
+        {filteredInvoices.map((inv) => (
           <div key={inv.id} className="p-4 space-y-2">
             {/* TOP */}
             <div className="flex justify-between items-center">
@@ -144,8 +199,10 @@ export default function InvoiceTable({ invoices }: Props) {
           </div>
         ))}
 
-        {invoices.length === 0 && (
-          <div className="text-center p-6 text-gray-500">No invoices yet</div>
+        {filteredInvoices.length === 0 && (
+          <div className="text-center p-6 text-gray-500">
+            No matching invoices
+          </div>
         )}
       </div>
     </div>
