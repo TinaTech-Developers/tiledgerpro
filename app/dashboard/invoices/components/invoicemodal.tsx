@@ -120,18 +120,30 @@ export default function InvoiceModal({
     }
   };
 
+  if (!customers.length || !products.length) {
+    return (
+      <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+        <div className="bg-white p-6 rounded-lg">
+          <p className="text-gray-600">Loading data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-2">
-      <div className="bg-white w-full max-w-6xl max-h-[95vh] overflow-y-auto rounded-2xl p-4 md:p-6 space-y-6">
+      <div className="bg-white w-full max-w-6xl max-h-[95vh] overflow-y-auto rounded-lg p-4 md:p-6 space-y-6">
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:justify-between gap-2">
-          <h2 className="text-lg md:text-xl font-bold">Create Invoice</h2>
+          <h2 className="text-lg md:text-xl font-bold text-gray-800">
+            Create Invoice
+          </h2>
           <p className="text-sm text-gray-500">Invoice auto-generated</p>
         </div>
 
         {/* CUSTOMER */}
         <select
-          className="w-full border p-3 rounded-lg"
+          className="w-full border p-3 rounded-lg border-gray-300 text-gray-700"
           value={customerId}
           onChange={(e) => setCustomerId(e.target.value)}
         >
@@ -151,7 +163,7 @@ export default function InvoiceModal({
               className="grid grid-cols-1 md:grid-cols-6 gap-2 border p-3 rounded-lg"
             >
               <select
-                className="border p-2 rounded"
+                className="border p-2 rounded border-gray-300 text-gray-700"
                 value={item.productId}
                 onChange={(e) => handleProductChange(i, e.target.value)}
               >
@@ -164,7 +176,7 @@ export default function InvoiceModal({
               </select>
 
               <input
-                className="border p-2 rounded"
+                className="border p-2 rounded border-gray-300 text-gray-700"
                 placeholder="Description"
                 value={item.description}
                 onChange={(e) => updateItem(i, "description", e.target.value)}
@@ -172,7 +184,7 @@ export default function InvoiceModal({
 
               <input
                 type="number"
-                className="border p-2 rounded"
+                className="border p-2 rounded border-gray-300 text-gray-700"
                 value={item.quantity}
                 onChange={(e) =>
                   updateItem(i, "quantity", Number(e.target.value))
@@ -181,12 +193,12 @@ export default function InvoiceModal({
 
               <input
                 type="number"
-                className="border p-2 rounded"
+                className="border p-2 rounded border-gray-300 text-gray-700"
                 value={item.price}
                 onChange={(e) => updateItem(i, "price", Number(e.target.value))}
               />
 
-              <div className="text-right font-medium flex items-center justify-end">
+              <div className="text-right font-medium flex items-center text-gray-700 justify-end">
                 ${(item.quantity * item.price).toFixed(2)}
               </div>
 
@@ -208,17 +220,17 @@ export default function InvoiceModal({
         {/* SUMMARY */}
         <div className="border-t pt-4 flex justify-center md:justify-end">
           <div className="w-full md:w-64 space-y-2 text-sm">
-            <div className="flex justify-between">
+            <div className="flex justify-between text-gray-800">
               <span>Subtotal</span>
               <span>${subtotal.toFixed(2)}</span>
             </div>
 
-            <div className="flex justify-between">
+            <div className="flex justify-between text-gray-800">
               <span>Tax</span>
               <span>${tax.toFixed(2)}</span>
             </div>
 
-            <div className="flex justify-between font-bold text-lg">
+            <div className="flex justify-between font-bold text-lg text-gray-800">
               <span>Total</span>
               <span>${total.toFixed(2)}</span>
             </div>
@@ -229,7 +241,7 @@ export default function InvoiceModal({
         <div className="flex flex-col md:flex-row justify-end gap-2">
           <button
             onClick={onClose}
-            className="w-full md:w-auto border px-4 py-2 rounded"
+            className="w-full md:w-auto border px-4 py-2 rounded bg-red-500 hover:bg-red-600 text-white"
           >
             Cancel
           </button>

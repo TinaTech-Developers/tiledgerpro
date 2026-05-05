@@ -13,8 +13,12 @@ export default function InvoicesPage() {
 
   const organizationId = "dec771e0-60bb-478e-86a0-9bf2f5bb2636";
 
+  const [loading, setLoading] = useState(true);
+
   const fetchData = async () => {
     try {
+      setLoading(true);
+
       const [invRes, custRes, prodRes] = await Promise.allSettled([
         apiFetch("/api/invoices"),
         apiFetch("/api/customers"),
@@ -34,12 +38,18 @@ export default function InvoicesPage() {
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
   }, []);
+  useEffect(() => {
+    console.log("Customers:", customers);
+    console.log("Products:", products);
+  }, [customers, products]);
 
   return (
     <div className="p-4 md:p-6 bg-gray-100 min-h-screen space-y-6">
@@ -51,9 +61,10 @@ export default function InvoicesPage() {
 
         <button
           onClick={() => setOpen(true)}
-          className="w-full sm:w-auto bg-[#0F172A] text-white px-4 py-2 rounded-lg"
+          disabled={loading || customers.length === 0 || products.length === 0}
+          className="w-full sm:w-auto bg-[#0F172A] text-white px-4 py-2 rounded-lg disabled:opacity-50"
         >
-          + New Invoice
+          {loading ? "Loading..." : "+ New Invoice"}
         </button>
       </div>
 
