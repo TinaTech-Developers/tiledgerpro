@@ -19,7 +19,7 @@ export default function VendorsPage() {
       const data = await apiFetch(
         `/api/vendors?organizationId=${organizationId}`,
       );
-      setVendors(data);
+      setVendors(Array.isArray(data) ? data : []);
     } finally {
       setLoading(false);
     }
@@ -30,15 +30,15 @@ export default function VendorsPage() {
   }, []);
 
   const filtered = vendors.filter((v) =>
-    v.name.toLowerCase().includes(search.toLowerCase()),
+    v.name?.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-4 md:p-6 space-y-6 bg-gray-100 min-h-screen">
       {/* HEADER */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Vendors</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Vendors</h1>
           <p className="text-sm text-gray-500">
             Manage your suppliers and partners
           </p>
@@ -49,7 +49,7 @@ export default function VendorsPage() {
             setSelected(null);
             setOpen(true);
           }}
-          className="bg-black text-white px-4 py-2 rounded"
+          className="bg-black text-white px-4 py-2 rounded w-full md:w-auto"
         >
           + Add Vendor
         </button>
@@ -57,60 +57,105 @@ export default function VendorsPage() {
 
       {/* SEARCH */}
       <input
-        className="w-full border p-2 rounded"
+        className="w-full md:max-w-sm border p-2 rounded text-sm"
         placeholder="Search vendors..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {/* TABLE */}
+      {/* TABLE / CARDS */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left">
-            <tr>
-              <th className="p-3">Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th className="p-3">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading ?
+        {/* ================= DESKTOP TABLE ================= */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-left">
               <tr>
-                <td className="p-4" colSpan={4}>
-                  Loading...
-                </td>
+                <th className="p-3">Name</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Phone</th>
+                <th className="p-3 text-right">Actions</th>
               </tr>
-            : filtered.map((v) => (
-                <tr key={v.id} className="border-t">
-                  <td className="p-3 font-medium">{v.name}</td>
-                  <td className="p-3">{v.email || "-"}</td>
-                  <td className="p-3">{v.phone || "-"}</td>
+            </thead>
 
-                  <td className="p-3">
-                    <button
-                      onClick={() => {
-                        setSelected(v);
-                        setOpen(true);
-                      }}
-                      className="text-blue-600"
-                    >
-                      Edit
-                    </button>
+            <tbody>
+              {loading ?
+                <tr>
+                  <td colSpan={4} className="p-4 text-center">
+                    Loading...
                   </td>
                 </tr>
-              ))
-            }
-          </tbody>
-        </table>
+              : filtered.map((v) => (
+                  <tr key={v.id} className="border-t hover:bg-gray-50">
+                    <td className="p-3 font-medium">{v.name}</td>
+                    <td className="p-3">{v.email || "-"}</td>
+                    <td className="p-3">{v.phone || "-"}</td>
+
+                    <td className="p-3 text-right">
+                      <button
+                        onClick={() => {
+                          setSelected(v);
+                          setOpen(true);
+                        }}
+                        className="text-blue-600"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              }
+
+              {!loading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="text-center p-6 text-gray-500">
+                    No vendors found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ================= MOBILE CARDS ================= */}
+        <div className="md:hidden divide-y">
+          {loading ?
+            <div className="p-4 text-center">Loading...</div>
+          : filtered.map((v) => (
+              <div key={v.id} className="p-4 space-y-2">
+                <p className="font-semibold text-gray-800">{v.name}</p>
+
+                <p className="text-sm text-gray-600">Email: {v.email || "-"}</p>
+
+                <p className="text-sm text-gray-600">Phone: {v.phone || "-"}</p>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      setSelected(v);
+                      setOpen(true);
+                    }}
+                    className="text-blue-600 text-sm"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+            ))
+          }
+
+          {!loading && filtered.length === 0 && (
+            <div className="text-center p-6 text-gray-500">
+              No vendors found
+            </div>
+          )}
+        </div>
       </div>
 
       {/* MODAL */}
       {open && (
         <VendorModal
           vendor={selected}
-          organizationId={organizationId} // ✅ FIXED
+          organizationId={organizationId}
           onClose={() => setOpen(false)}
           onSuccess={() => {
             setOpen(false);

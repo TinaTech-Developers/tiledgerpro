@@ -27,8 +27,8 @@ export default function InvoicePrintView({ invoice, company }: any) {
       {/* INVOICE A4 */}
       <div
         id="invoice-a4"
-        className="bg-white p-10 mx-auto shadow-lg text-black print:shadow-none"
-        style={{ width: "210mm", minHeight: "297mm" }}
+        // className="bg-white p-10 mx-auto shadow-lg text-black print:shadow-none"
+        className="bg-white text-sm mx-auto shadow w-full max-w-[210mm] min-h-[297mm] p-4 md:p-[20mm]"
       >
         {/* HEADER */}
         <div className="flex justify-between mb-10 border-b pb-6">

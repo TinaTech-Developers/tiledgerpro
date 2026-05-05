@@ -38,14 +38,12 @@ export default function InvoiceModal({
 }: Props) {
   const [customerId, setCustomerId] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const [taxRate] = useState(0.15); // 15% tax (you can make configurable)
+  const [taxRate] = useState(0.15);
 
   const [items, setItems] = useState<Item[]>([
     { productId: "", description: "", quantity: 1, price: 0 },
   ]);
 
-  // ➕ Add item
   const addItem = () => {
     setItems((prev) => [
       ...prev,
@@ -53,12 +51,10 @@ export default function InvoiceModal({
     ]);
   };
 
-  // ❌ Remove item
   const removeItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ✏️ Update item
   const updateItem = <K extends keyof Item>(
     index: number,
     field: K,
@@ -69,7 +65,6 @@ export default function InvoiceModal({
     );
   };
 
-  // 🎯 Product selection
   const handleProductChange = (index: number, productId: string) => {
     const product = products.find((p) => p.id === productId);
 
@@ -87,14 +82,10 @@ export default function InvoiceModal({
     );
   };
 
-  // 💰 CALCULATIONS (REAL ACCOUNTING STYLE)
   const subtotal = items.reduce((sum, i) => sum + i.quantity * i.price, 0);
-
   const tax = subtotal * taxRate;
-
   const total = subtotal + tax;
 
-  // 🚀 Submit
   const handleSubmit = async () => {
     if (!customerId) return alert("Select customer");
 
@@ -102,9 +93,7 @@ export default function InvoiceModal({
       (i) => i.productId && i.quantity > 0 && i.price > 0,
     );
 
-    if (validItems.length === 0) {
-      return alert("Add at least one valid item");
-    }
+    if (!validItems.length) return alert("Add valid item");
 
     setLoading(true);
 
@@ -115,36 +104,29 @@ export default function InvoiceModal({
           customerId,
           organizationId,
           dueDate: new Date().toISOString(),
-
-          // 🔥 accounting fields
           subtotal,
           tax,
           totalAmount: total,
-
           items: validItems,
         }),
       });
 
       onSuccess();
       onClose();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to create invoice");
+    } catch {
+      alert("Failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 m-2">
-      <div className="bg-white w-full max-w-6xl p-6 rounded-2xl shadow-xl space-y-6">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-2">
+      <div className="bg-white w-full max-w-6xl max-h-[95vh] overflow-y-auto rounded-2xl p-4 md:p-6 space-y-6">
         {/* HEADER */}
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">Create Invoice</h2>
-
-          <div className="text-sm text-gray-500">
-            Invoice will be generated automatically
-          </div>
+        <div className="flex flex-col md:flex-row md:justify-between gap-2">
+          <h2 className="text-lg md:text-xl font-bold">Create Invoice</h2>
+          <p className="text-sm text-gray-500">Invoice auto-generated</p>
         </div>
 
         {/* CUSTOMER */}
@@ -161,27 +143,19 @@ export default function InvoiceModal({
           ))}
         </select>
 
-        {/* ITEMS HEADER */}
-        <div className="grid grid-cols-6 text-xs font-semibold text-gray-500 uppercase">
-          <div>Product</div>
-          <div>Description</div>
-          <div>Qty</div>
-          <div>Price</div>
-          <div>Total</div>
-          <div></div>
-        </div>
-
         {/* ITEMS */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           {items.map((item, i) => (
-            <div key={i} className="grid grid-cols-6 gap-2 items-center">
-              {/* PRODUCT */}
+            <div
+              key={i}
+              className="grid grid-cols-1 md:grid-cols-6 gap-2 border p-3 rounded-lg"
+            >
               <select
                 className="border p-2 rounded"
                 value={item.productId}
                 onChange={(e) => handleProductChange(i, e.target.value)}
               >
-                <option value="">Select</option>
+                <option value="">Product</option>
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -189,17 +163,15 @@ export default function InvoiceModal({
                 ))}
               </select>
 
-              {/* DESCRIPTION */}
               <input
                 className="border p-2 rounded"
+                placeholder="Description"
                 value={item.description}
                 onChange={(e) => updateItem(i, "description", e.target.value)}
               />
 
-              {/* QTY */}
               <input
                 type="number"
-                min={1}
                 className="border p-2 rounded"
                 value={item.quantity}
                 onChange={(e) =>
@@ -207,7 +179,6 @@ export default function InvoiceModal({
                 }
               />
 
-              {/* PRICE */}
               <input
                 type="number"
                 className="border p-2 rounded"
@@ -215,12 +186,10 @@ export default function InvoiceModal({
                 onChange={(e) => updateItem(i, "price", Number(e.target.value))}
               />
 
-              {/* LINE TOTAL */}
-              <div className="text-right font-medium">
+              <div className="text-right font-medium flex items-center justify-end">
                 ${(item.quantity * item.price).toFixed(2)}
               </div>
 
-              {/* REMOVE */}
               <button
                 onClick={() => removeItem(i)}
                 className="text-red-500 text-sm"
@@ -232,23 +201,20 @@ export default function InvoiceModal({
         </div>
 
         {/* ADD ITEM */}
-        <button
-          onClick={addItem}
-          className="text-blue-600 text-sm hover:underline"
-        >
+        <button onClick={addItem} className="text-blue-600 text-sm">
           + Add Item
         </button>
 
-        {/* SUMMARY (ACCOUNTING STYLE) */}
-        <div className="border-t pt-4 flex justify-end">
-          <div className="w-64 space-y-2 text-sm">
+        {/* SUMMARY */}
+        <div className="border-t pt-4 flex justify-center md:justify-end">
+          <div className="w-full md:w-64 space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Subtotal</span>
               <span>${subtotal.toFixed(2)}</span>
             </div>
 
             <div className="flex justify-between">
-              <span>Tax (15%)</span>
+              <span>Tax</span>
               <span>${tax.toFixed(2)}</span>
             </div>
 
@@ -260,15 +226,18 @@ export default function InvoiceModal({
         </div>
 
         {/* ACTIONS */}
-        <div className="flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 border rounded-lg">
+        <div className="flex flex-col md:flex-row justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="w-full md:w-auto border px-4 py-2 rounded"
+          >
             Cancel
           </button>
 
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="bg-black text-white px-4 py-2 rounded-lg"
+            className="w-full md:w-auto bg-black text-white px-4 py-2 rounded"
           >
             {loading ? "Creating..." : "Create Invoice"}
           </button>
