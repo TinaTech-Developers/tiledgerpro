@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Items required" }, { status: 400 });
     }
 
-    // ✅ calculate total safely
+    // ✅ total calculation
     const totalAmount = items.reduce((sum: number, item: any) => {
       const price = Number(item.price);
       const qty = Number(item.quantity);
@@ -72,32 +72,53 @@ export async function POST(req: NextRequest) {
       return sum + price * qty;
     }, 0);
 
-    const invoice = await prisma.invoice.create({
-      data: {
-        customerId,
-        organizationId,
-        totalAmount,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        status: "DRAFT",
+    // 🚀 TRANSACTION (IMPORTANT)
+    const invoice = await prisma.$transaction(async (tx) => {
+      // 1. Create invoice
+      const createdInvoice = await tx.invoice.create({
+        data: {
+          customerId,
+          organizationId,
+          totalAmount,
+          dueDate: dueDate ? new Date(dueDate) : null,
+          status: "DRAFT",
 
-        invoiceItems: {
-          create: items.map((item: any) => ({
-            productId: item.productId || null, // ✅ optional
-            description: item.description,
-            quantity: Number(item.quantity),
-            price: Number(item.price),
-          })),
+          invoiceItems: {
+            create: items.map((item: any) => ({
+              productId: item.productId || null,
+              description: item.description,
+              quantity: Number(item.quantity),
+              price: Number(item.price),
+            })),
+          },
         },
-      },
-      include: {
-        customer: true,
-        invoiceItems: true,
-      },
+        include: {
+          customer: true,
+          invoiceItems: true,
+        },
+      });
+
+      // 2. STOCK DECREMENT (your code properly placed here)
+      for (const item of items) {
+        if (item.productId) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stock: {
+                decrement: Number(item.quantity),
+              },
+            },
+          });
+        }
+      }
+
+      return createdInvoice;
     });
 
     return NextResponse.json(invoice, { status: 201 });
   } catch (err: any) {
     console.error("INVOICE CREATE ERROR:", err);
+
     return NextResponse.json(
       { error: err.message || "Failed to create invoice" },
       { status: 500 },
