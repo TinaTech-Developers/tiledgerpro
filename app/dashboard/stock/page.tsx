@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api";
 
@@ -7,6 +6,10 @@ export default function StockPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | "LOW" | "OUT" | "IN">("ALL");
+
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [movements, setMovements] = useState<any[]>([]);
+  const [loadingMovements, setLoadingMovements] = useState(false);
 
   const organizationId = "dec771e0-60bb-478e-86a0-9bf2f5bb2636";
   const LOW_STOCK = 5;
@@ -21,6 +24,20 @@ export default function StockPage() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const fetchMovements = async (productId: string) => {
+    setLoadingMovements(true);
+    try {
+      const data = await apiFetch(
+        `/api/stock-movements?productId=${productId}&organizationId=${organizationId}`,
+      );
+      setMovements(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMovements(false);
+    }
+  };
 
   // ================= STATS =================
   const stats = useMemo(() => {
@@ -52,6 +69,27 @@ export default function StockPage() {
       return matchSearch && matchFilter;
     });
   }, [products, search, filter]);
+
+  const adjustStock = async (productId: string, type: "IN" | "OUT") => {
+    const qty = Number(
+      prompt(`Enter quantity to ${type === "IN" ? "add" : "remove"}`),
+    );
+
+    if (!qty || qty <= 0) return;
+
+    await apiFetch("/api/stock-movements", {
+      method: "POST",
+      body: JSON.stringify({
+        productId,
+        organizationId,
+        type,
+        quantity: qty,
+        note: "Manual adjustment",
+      }),
+    });
+
+    fetchProducts();
+  };
 
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-5 sm:space-y-6 bg-gray-50 min-h-screen">
@@ -110,6 +148,7 @@ export default function StockPage() {
             p.stock === 0 ? "OUT"
             : p.stock <= LOW_STOCK ? "LOW"
             : "IN";
+          const isCritical = p.stock <= 2;
 
           return (
             <div
@@ -122,6 +161,7 @@ export default function StockPage() {
                 <span
                   className={`text-xs px-2 py-1 rounded ${
                     status === "OUT" ? "bg-red-100 text-red-700"
+                    : isCritical ? "bg-orange-100 text-orange-700"
                     : status === "LOW" ? "bg-yellow-100 text-yellow-700"
                     : "bg-green-100 text-green-700"
                   }`}
@@ -132,16 +172,44 @@ export default function StockPage() {
 
               <p className="text-xs text-gray-500">SKU: {p.sku || "—"}</p>
 
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-gray-600">
                 <span>Price</span>
                 <span className="font-semibold">
                   ${Number(p.price).toFixed(2)}
                 </span>
               </div>
 
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-gray-600">
                 <span>Stock</span>
                 <span className="font-bold">{p.stock}</span>
+              </div>
+              <p className="text-[10px] text-gray-400">
+                Updated: {new Date(p.updatedAt).toLocaleDateString()}
+              </p>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => adjustStock(p.id, "IN")}
+                  className="text-green-600 text-xs"
+                >
+                  + Add
+                </button>
+
+                <button
+                  onClick={() => adjustStock(p.id, "OUT")}
+                  className="text-red-600 text-xs"
+                >
+                  - Remove
+                </button>
+
+                <button
+                  onClick={() => {
+                    setSelectedProduct(p);
+                    fetchMovements(p.id);
+                  }}
+                  className="text-blue-600 text-xs"
+                >
+                  History
+                </button>
               </div>
             </div>
           );
@@ -153,11 +221,12 @@ export default function StockPage() {
         <table className="w-full min-w-[700px] text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
-              <th className="p-4 text-left">Product</th>
-              <th className="p-4 text-left">SKU</th>
-              <th className="p-4 text-left">Price</th>
-              <th className="p-4 text-left">Stock</th>
-              <th className="p-4 text-left">Status</th>
+              <th className="p-4 text-left text-gray-700">Product</th>
+              <th className="p-4 text-left text-gray-700">SKU</th>
+              <th className="p-4 text-left text-gray-700">Price</th>
+              <th className="p-4 text-left text-gray-700">Stock</th>
+              <th className="p-4 text-left text-gray-700">Status</th>
+              <th className="p-4 text-left text-gray-700">Actions</th>
             </tr>
           </thead>
 
@@ -183,6 +252,9 @@ export default function StockPage() {
                         {p.description}
                       </p>
                     </div>
+                    <p className="text-[10px] text-gray-400">
+                      Updated: {new Date(p.updatedAt).toLocaleDateString()}
+                    </p>
                   </td>
 
                   <td className="p-4 text-gray-500">{p.sku || "—"}</td>
@@ -204,6 +276,31 @@ export default function StockPage() {
                       {status}
                     </span>
                   </td>
+                  <td className="p-4 space-x-2">
+                    <button
+                      onClick={() => adjustStock(p.id, "IN")}
+                      className="text-green-600 text-xs hover:underline"
+                    >
+                      + Add
+                    </button>
+
+                    <button
+                      onClick={() => adjustStock(p.id, "OUT")}
+                      className="text-red-600 text-xs hover:underline"
+                    >
+                      - Remove
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setSelectedProduct(p);
+                        fetchMovements(p.id);
+                      }}
+                      className="text-blue-600 text-xs hover:underline"
+                    >
+                      History
+                    </button>
+                  </td>
                 </tr>
               );
             })}
@@ -218,6 +315,47 @@ export default function StockPage() {
           </tbody>
         </table>
       </div>
+      {selectedProduct && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-lg rounded-lg p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="font-semibold text-lg">
+                Stock History - {selectedProduct.name}
+              </h2>
+
+              <button onClick={() => setSelectedProduct(null)}>✕</button>
+            </div>
+
+            {loadingMovements ?
+              <p className="text-sm text-gray-500">Loading...</p>
+            : movements.length === 0 ?
+              <p className="text-sm text-gray-400">No movements yet</p>
+            : <div className="space-y-2 max-h-80 overflow-y-auto">
+                {movements.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex justify-between text-sm border-b pb-1"
+                  >
+                    <span
+                      className={`font-medium ${
+                        m.type === "IN" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {m.type}
+                    </span>
+
+                    <span>{m.quantity}</span>
+
+                    <span className="text-gray-400 text-xs">
+                      {new Date(m.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            }
+          </div>
+        </div>
+      )}
     </div>
   );
 }
