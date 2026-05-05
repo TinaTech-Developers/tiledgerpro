@@ -58,7 +58,7 @@ export default function InvoicesPage() {
       </div>
 
       {/* TABLE WRAPPER (IMPORTANT FOR MOBILE SCROLL) */}
-      <div className="bg-white rounded-xl shadow border overflow-x-auto">
+      <div className="bg-white rounded-xl shadow border">
         <InvoiceTable invoices={invoices} />
       </div>
 
