@@ -152,38 +152,43 @@ model Transaction {
   reversedFrom   Transaction?         @relation("Reversal", fields: [reversedFromId], references: [id])
   reversals      Transaction[]        @relation("Reversal")
 
-  referenceType  String? // "invoice", "bill", "expense"
-  referenceId    String?
+  referenceType String? // "invoice", "bill", "expense"
+  referenceId   String?
 }
 
 model Product {
-  id             String          @id @default(uuid())
-   sku           String?         @unique
+  id             String   @id @default(uuid())
+  sku            String?  @unique
   name           String
   description    String?
   price          Float
-  stock          Int             @default(0)
+  stock          Int      @default(0)
   organizationId String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   imageUrl       String?
-  status         String          @default("IN_STOCK")
+  status         String   @default("IN_STOCK")
+
   invoiceItems   InvoiceItem[]
-  organization   Organization    @relation(fields: [organizationId], references: [id])
   quotationItems QuotationItem[]
   saleItems      SaleItem[]
+
+  // ✅ ADD THIS LINE
+  stockMovements StockMovement[]
+
+  organization Organization @relation(fields: [organizationId], references: [id])
 }
 
 model StockMovement {
-  id             String   @id @default(uuid())
+  id             String            @id @default(uuid())
   productId      String
   organizationId String
   type           StockMovementType
   quantity       Int
   note           String?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime          @default(now())
 
-  product        Product  @relation(fields: [productId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 }
 
 enum StockMovementType {
@@ -193,7 +198,6 @@ enum StockMovementType {
   SALE
   RETURN
 }
-
 
 model Sale {
   id             String        @id @default(uuid())
@@ -235,17 +239,17 @@ model Customer {
 }
 
 model Vendor {
-  id             String       @id @default(uuid())
+  id             String  @id @default(uuid())
   organizationId String
   name           String
   email          String?
   phone          String?
 
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  bills          Bill[]
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  bills        Bill[]
+  organization Organization @relation(fields: [organizationId], references: [id])
 }
 
 model Invoice {
@@ -313,17 +317,18 @@ model Quotation {
   organization   Organization    @relation(fields: [organizationId], references: [id])
   quotationItems QuotationItem[]
 }
+
 model QuotationItem {
-  id          String    @id @default(uuid())
+  id          String @id @default(uuid())
   quotationId String
 
-  productId   String?   // optional
+  productId   String? // optional
   quantity    Int
   price       Float
-  description String?    // 🔥 for services
+  description String? // 🔥 for services
 
-  product     Product?  @relation(fields: [productId], references: [id])
-  quotation   Quotation @relation(fields: [quotationId], references: [id])
+  product   Product?  @relation(fields: [productId], references: [id])
+  quotation Quotation @relation(fields: [quotationId], references: [id])
 }
 
 enum UserRole {
