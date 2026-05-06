@@ -10,6 +10,7 @@ const menu = [
     name: "Accounting",
     children: [
       { name: "Accounts", href: "/dashboard/accounts" },
+      { name: "Assets", href: "/dashboard/assets" },
       { name: "Transactions", href: "/dashboard/transactions" },
     ],
   },

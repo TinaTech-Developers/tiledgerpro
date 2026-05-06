@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
-import { verifyToken } from "../../../lib/jwt";
+import { prisma } from "@/lib/prisma";
+import { verifyToken } from "@/lib/jwt";
 import { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 
 // =========================
-// AUTH HELPER (INLINE SAFE)
+// AUTH
 // =========================
 function getUser(req: NextRequest) {
   const auth = req.headers.get("authorization");
@@ -37,22 +37,26 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
 
-    const page = Number(searchParams.get("page") || 1);
-    const limit = Number(searchParams.get("limit") || 10);
+    const page = Math.max(Number(searchParams.get("page") || 1), 1);
+    const limit = Math.min(Number(searchParams.get("limit") || 10), 100);
     const search = searchParams.get("search") || "";
+    const type = searchParams.get("type"); // ✅ IMPORTANT (for filtering)
 
     const skip = (page - 1) * limit;
 
     const where: Prisma.AccountWhereInput = {
       organizationId: user.organizationId,
-      ...(search ?
-        {
-          name: {
-            contains: search,
-            mode: Prisma.QueryMode.insensitive,
-          },
-        }
-      : {}),
+
+      ...(search && {
+        name: {
+          contains: search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      }),
+
+      ...(type && {
+        type: type as any, // ACCOUNT TYPE FILTER (CASH, EXPENSE, etc)
+      }),
     };
 
     const [accounts, total] = await Promise.all([
@@ -60,17 +64,25 @@ export async function GET(req: NextRequest) {
         where,
         skip,
         take: limit,
-        include: { chartOfAccount: true },
-        orderBy: { createdAt: "desc" },
+        include: {
+          chartOfAccount: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
       }),
+
       prisma.account.count({ where }),
     ]);
 
     return NextResponse.json({
-      accounts,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      data: accounts, // ✅ consistent API shape
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
     console.error("GET ACCOUNTS ERROR:", err);
@@ -95,6 +107,32 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { name, type, chartOfAccountId } = body;
 
+    // ✅ VALIDATION (IMPORTANT FOR ACCOUNTING SYSTEMS)
+    const allowedTypes = [
+      "CASH",
+      "BANK",
+      "MOBILE_MONEY",
+      "ACCOUNTS_RECEIVABLE",
+      "ACCOUNTS_PAYABLE",
+      "EXPENSE",
+      "INCOME",
+      "EQUITY",
+    ];
+
+    if (!name || !type) {
+      return NextResponse.json(
+        { error: "Name and type are required" },
+        { status: 400 },
+      );
+    }
+
+    if (!allowedTypes.includes(type)) {
+      return NextResponse.json(
+        { error: "Invalid account type" },
+        { status: 400 },
+      );
+    }
+
     const account = await prisma.account.create({
       data: {
         name,
@@ -103,7 +141,9 @@ export async function POST(req: NextRequest) {
         organizationId: user.organizationId,
         chartOfAccountId: chartOfAccountId ?? null,
       },
-      include: { chartOfAccount: true },
+      include: {
+        chartOfAccount: true,
+      },
     });
 
     return NextResponse.json(account, { status: 201 });
@@ -130,23 +170,25 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { id, name, type, chartOfAccountId } = body;
 
-    const existing = await prisma.account.findUnique({ where: { id } });
+    const account = await prisma.account.findUnique({ where: { id } });
 
-    if (!existing || existing.organizationId !== user.organizationId) {
+    if (!account || account.organizationId !== user.organizationId) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
-    const account = await prisma.account.update({
+    const updated = await prisma.account.update({
       where: { id },
       data: {
         name,
         type,
         chartOfAccountId: chartOfAccountId ?? null,
       },
-      include: { chartOfAccount: true },
+      include: {
+        chartOfAccount: true,
+      },
     });
 
-    return NextResponse.json(account);
+    return NextResponse.json(updated);
   } catch (err) {
     console.error("PUT ACCOUNT ERROR:", err);
     return NextResponse.json(
@@ -174,9 +216,9 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "ID is required" }, { status: 400 });
     }
 
-    const existing = await prisma.account.findUnique({ where: { id } });
+    const account = await prisma.account.findUnique({ where: { id } });
 
-    if (!existing || existing.organizationId !== user.organizationId) {
+    if (!account || account.organizationId !== user.organizationId) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 

@@ -33,6 +33,7 @@ model Organization {
   sales          Sale[]
   transactions   Transaction[]
   vendors        Vendor[]
+  assets         Asset[]
   taxId          String?
 }
 
@@ -78,18 +79,28 @@ model Account {
 }
 
 model GeneralLedgerEntry {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
+  organizationId String
+
   accountId      String
   transactionId  String
-  organizationId String
+
   date           DateTime
   description    String
-  debit          Float        @default(0)
-  credit         Float        @default(0)
+
+  debit          Float    @default(0)
+  credit         Float    @default(0)
+
   balanceAfter   Float
+
+  referenceType  String?  // "expense", "invoice", etc
+  referenceId    String?
+
+  createdAt      DateTime @default(now())
+
   account        Account      @relation("AccountLedger", fields: [accountId], references: [id])
-  organization   Organization @relation(fields: [organizationId], references: [id])
   transaction    Transaction  @relation(fields: [transactionId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
 model Budget {
@@ -106,18 +117,47 @@ model Budget {
 }
 
 model Expense {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   accountId      String
   amount         Float
   category       String
   notes          String?
   date           DateTime
+
   createdById    String
-  account        Account      @relation("AccountExpense", fields: [accountId], references: [id])
-  createdBy      User         @relation(fields: [createdById], references: [id])
+
+  status         ExpenseStatus @default(POSTED)
+
+  // 🔥 accounting-grade additions
+  referenceNo    String?  @unique
+  approvedById   String?
+  approvedAt     DateTime?
+  isRecurring    Boolean  @default(false)
+  frequency      ExpenseFrequency?
+
+  createdAt      DateTime @default(now())
+
+  account        Account  @relation("AccountExpense", fields: [accountId], references: [id])
+  createdBy      User     @relation(fields: [createdById], references: [id])
   organization   Organization @relation(fields: [organizationId], references: [id])
 }
+
+enum ExpenseStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  POSTED
+  REJECTED
+}
+
+enum ExpenseFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
 
 model ChartOfAccount {
   id             String          @id @default(uuid())
@@ -329,6 +369,49 @@ model QuotationItem {
 
   product   Product?  @relation(fields: [productId], references: [id])
   quotation Quotation @relation(fields: [quotationId], references: [id])
+}
+
+model Asset {
+  id             String   @id @default(uuid())
+  organizationId String
+
+  name           String
+  category       String?
+
+  purchaseCost   Float
+  purchaseDate   DateTime
+
+  usefulLife     Int?
+  salvageValue   Float   @default(0)
+
+  currentValue   Float
+
+  status         AssetStatus @default(ACTIVE)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  // 👇 ADD THIS
+  depreciations  AssetDepreciation[]
+  notes          String?
+}
+model AssetDepreciation {
+  id        String @id @default(uuid())
+  assetId   String
+
+  date      DateTime
+  amount    Float
+  bookValue Float
+
+  asset     Asset @relation(fields: [assetId], references: [id])
+}
+
+enum AssetStatus {
+  ACTIVE
+  DISPOSED
+  SOLD
 }
 
 enum UserRole {

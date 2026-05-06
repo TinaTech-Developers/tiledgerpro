@@ -13,6 +13,7 @@ export default function ExpensesPage() {
     category: "",
     notes: "",
     date: "",
+    cashAccountId: "",
     accountId: "",
   });
 
@@ -30,12 +31,18 @@ export default function ExpensesPage() {
     if (!organizationId) return;
 
     const fetchAccounts = async () => {
-      const data = await apiFetch(
-        `/api/accounts?organizationId=${organizationId}`,
-      );
-      setAccounts(Array.isArray(data) ? data : []);
-    };
+      try {
+        const res = await apiFetch(
+          `/api/accounts?organizationId=${organizationId}`,
+        );
 
+        console.log("ACCOUNTS RESPONSE:", res);
+
+        setAccounts(Array.isArray(res?.data) ? res.data : []);
+      } catch (err) {
+        console.error("FAILED TO FETCH ACCOUNTS:", err);
+      }
+    };
     fetchAccounts();
   }, [organizationId]);
 
@@ -51,21 +58,25 @@ export default function ExpensesPage() {
   }, []);
 
   const createExpense = async () => {
-    if (!form.amount || !form.category || !form.accountId) {
+    if (
+      !form.amount ||
+      !form.category ||
+      !form.accountId ||
+      !form.cashAccountId
+    ) {
       alert("Fill all required fields");
       return;
     }
-
     await apiFetch("/api/expenses", {
       method: "POST",
       body: JSON.stringify({
         organizationId,
         accountId: form.accountId,
+        cashAccountId: form.cashAccountId, // 👈 REQUIRED
         amount: Number(form.amount),
         category: form.category,
         notes: form.notes,
         date: form.date,
-        createdById: "CURRENT_USER_ID", // replace with auth later
       }),
     });
 
@@ -76,6 +87,7 @@ export default function ExpensesPage() {
       notes: "",
       date: new Date().toISOString().split("T")[0],
       accountId: "",
+      cashAccountId: "",
     });
 
     fetchExpenses();
@@ -90,7 +102,7 @@ export default function ExpensesPage() {
     const today = new Date().toDateString();
 
     const todayTotal = expenses
-      .filter((e) => new Date(e.date).toDateString() === today)
+      .filter((e) => new Date(e.date).toISOString().split("T")[0] === today)
       .reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
     return { total, count, todayTotal };
@@ -141,7 +153,7 @@ export default function ExpensesPage() {
       {/* ================= SEARCH + FILTER ================= */}
       <div className="bg-white p-4 rounded-xl border shadow-sm space-y-3">
         <input
-          className="w-full border rounded-lg px-3 py-2 text-sm"
+          className="w-full border border-gray-300 text-gray-800 rounded-lg px-3 py-2 text-sm"
           placeholder="Search by category or notes..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -150,7 +162,7 @@ export default function ExpensesPage() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setCategoryFilter("ALL")}
-            className={`px-3 py-1 rounded-full text-xs border ${
+            className={`px-3 py-1 rounded-full text-xs border text-gray-800 ${
               categoryFilter === "ALL" ? "bg-black text-white" : "bg-white"
             }`}
           >
@@ -161,7 +173,7 @@ export default function ExpensesPage() {
             <button
               key={c}
               onClick={() => setCategoryFilter(c)}
-              className={`px-3 py-1 rounded-full text-xs border ${
+              className={`px-3 py-1 rounded-full text-xs border text-gray-800 ${
                 categoryFilter === c ? "bg-black text-white" : "bg-white"
               }`}
             >
@@ -187,7 +199,7 @@ export default function ExpensesPage() {
             </p>
 
             <p className="text-xs text-gray-400">
-              {new Date(e.date).toLocaleDateString()}
+              {new Date(e.date).toISOString().split("T")[0]}
             </p>
           </div>
         ))}
@@ -213,7 +225,7 @@ export default function ExpensesPage() {
                 <td className="p-4 text-gray-500">{e.notes || "—"}</td>
 
                 <td className="p-4 text-gray-500">
-                  {new Date(e.date).toLocaleDateString()}
+                  {new Date(e.date).toISOString().split("T")[0]}
                 </td>
 
                 <td className="p-4 text-right font-semibold text-red-600">
@@ -269,14 +281,31 @@ export default function ExpensesPage() {
                   "Loading accounts..."
                 : "Select Account"}
               </option>
-              {accounts.length === 0 ?
-                <option value="">No accounts available</option>
-              : accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}{" "}
+            </select>
+            {/* CASH / BANK ACCOUNT */}
+            <select
+              className="w-full border p-2 rounded"
+              value={form.cashAccountId}
+              onChange={(e) =>
+                setForm({ ...form, cashAccountId: e.target.value })
               }
+            >
+              <option value="">
+                {accounts.length === 0 ?
+                  "Loading accounts..."
+                : "Select Cash Account"}
+              </option>
+
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
             </select>
 
             {/* DATE */}
