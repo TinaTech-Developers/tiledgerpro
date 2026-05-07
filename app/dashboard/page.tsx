@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+
 import SummaryCard from "./components/SummaryCard";
 import Chart from "./components/Chart";
 import RecentActivity from "./components/RecentActivity";
@@ -11,10 +13,8 @@ type Analytics = {
   expenses: number;
   net: number;
   expenseRatio: number;
-
   monthly: Record<string, number>;
   categories: Record<string, number>;
-
   outstandingInvoices: number;
   outstandingBills: number;
 };
@@ -34,38 +34,33 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
-      try {
-        const [analyticsRes, txnRes] = await Promise.all([
-          fetch("/api/analytics"),
-          fetch("/api/transactions"),
-        ]);
+      const [a, t] = await Promise.all([
+        fetch("/api/analytics"),
+        fetch("/api/transactions"),
+      ]);
 
-        const analyticsData: Analytics = await analyticsRes.json();
-        const txnData: Transaction[] = await txnRes.json();
+      const ad = await a.json();
+      const td = await t.json();
 
-        setAnalytics(analyticsData);
-        setTransactions(Array.isArray(txnData) ? txnData : []);
-      } catch (e) {
-        console.error("Dashboard load error:", e);
-      }
+      setAnalytics(ad);
+      setTransactions(Array.isArray(td) ? td : []);
     }
 
     load();
   }, []);
 
-  // ⛔ prevent render before data
   if (!analytics) {
-    return <div className="p-6">Loading dashboard...</div>;
+    return (
+      <div className="p-6 text-gray-500 animate-pulse">
+        Loading dashboard...
+      </div>
+    );
   }
 
-  // ================= SAFE DATA =================
   const income = Number(analytics.income || 0);
   const expenses = Number(analytics.expenses || 0);
   const net = Number(analytics.net || 0);
   const expenseRatio = Number(analytics.expenseRatio || 0);
-
-  const outstandingInvoices = Number(analytics.outstandingInvoices || 0);
-  const outstandingBills = Number(analytics.outstandingBills || 0);
 
   const labels = Object.keys(analytics.monthly || {});
   const values = Object.values(analytics.monthly || {});
@@ -78,32 +73,71 @@ export default function DashboardPage() {
       expenseLabels[expenseValues.indexOf(Math.max(...expenseValues))]
     : "None";
 
+  // animation variants
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.12 },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 },
+  };
+
   return (
     <div className="p-4 md:p-6 bg-gray-100 min-h-screen space-y-6">
-      {/* KPI */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <SummaryCard title="Income" value={`$${income.toLocaleString()}`} />
-        <SummaryCard title="Expenses" value={`$${expenses.toLocaleString()}`} />
-        <SummaryCard title="Net Profit" value={`$${net.toLocaleString()}`} />
-        <SummaryCard
-          title="Expense Ratio"
-          value={`${expenseRatio.toFixed(1)}%`}
-        />
-      </div>
+      {/* ================= KPIs ================= */}
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
+      >
+        {[
+          { title: "Income", value: income },
+          { title: "Expenses", value: expenses },
+          { title: "Net Profit", value: net },
+          { title: "Expense Ratio", value: `${expenseRatio.toFixed(1)}%` },
+        ].map((c, i) => (
+          <motion.div key={i} variants={item}>
+            <SummaryCard title={c.title} value={`$${c.value}`} />
+          </motion.div>
+        ))}
+      </motion.div>
 
-      {/* MAIN */}
+      {/* ================= MAIN GRID ================= */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 bg-white rounded-2xl p-4 shadow-sm">
+        {/* LEFT */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="xl:col-span-2 bg-white rounded-2xl p-4 shadow-sm"
+        >
           <h2 className="font-semibold mb-3 text-gray-700">
             Monthly Transactions
           </h2>
           <Chart labels={labels} data={values} />
-        </div>
+        </motion.div>
 
+        {/* RIGHT */}
         <div className="flex flex-col gap-6">
-          <Speedometer value={expenseRatio} />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Speedometer value={expenseRatio} />
+          </motion.div>
 
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl p-4 shadow-sm"
+          >
             <h2 className="font-semibold mb-3 text-gray-700">
               Income vs Expenses
             </h2>
@@ -112,20 +146,28 @@ export default function DashboardPage() {
               data={[income, expenses]}
               type="bar"
             />
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl p-4 shadow-sm"
+          >
             <h2 className="font-semibold mb-3 text-gray-700">
               Expense Categories
             </h2>
             <Chart labels={expenseLabels} data={expenseValues} type="bar" />
-          </div>
+          </motion.div>
         </div>
       </div>
 
-      {/* BOTTOM */}
+      {/* ================= BOTTOM ================= */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="xl:col-span-2"
+        >
           <RecentActivity
             activities={transactions.map((t) => ({
               id: t.id,
@@ -135,19 +177,23 @@ export default function DashboardPage() {
               date: t.createdAt,
             }))}
           />
-        </div>
+        </motion.div>
 
-        <div className="flex flex-col gap-6">
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex flex-col gap-6"
+        >
           <SummaryCard
             title="Outstanding Invoices"
-            value={`$${outstandingInvoices.toLocaleString()}`}
+            value={`$${analytics.outstandingInvoices}`}
           />
           <SummaryCard
             title="Outstanding Bills"
-            value={`$${outstandingBills.toLocaleString()}`}
+            value={`$${analytics.outstandingBills}`}
           />
           <SummaryCard title="Top Category" value={topCategory} />
-        </div>
+        </motion.div>
       </div>
     </div>
   );

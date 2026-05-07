@@ -2,15 +2,40 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
+import { verifyToken } from "@/lib/jwt";
 
-// get all organizations (for admin use, not exposed in UI)
-export async function GET() {
+function getUser(req: NextRequest) {
+  const auth = req.headers.get("authorization");
+  if (!auth?.startsWith("Bearer ")) return null;
+
+  const token = auth.split(" ")[1];
+  const decoded = verifyToken(token);
+
+  if (!decoded || typeof decoded === "string") return null;
+
+  return decoded as {
+    userId: string;
+    organizationId: string;
+  };
+}
+
+// GET organization (FOR SETTINGS PAGE)
+export async function GET(req: NextRequest) {
   try {
-    const orgs = await prisma.organization.findMany();
-    return NextResponse.json(orgs);
+    const user = getUser(req);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const org = await prisma.organization.findUnique({
+      where: { id: user.organizationId },
+    });
+
+    return NextResponse.json(org);
   } catch (err) {
     return NextResponse.json(
-      { error: "Failed to fetch organizations" },
+      { error: "Failed to fetch organization" },
       { status: 500 },
     );
   }

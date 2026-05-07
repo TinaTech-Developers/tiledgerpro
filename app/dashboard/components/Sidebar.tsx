@@ -44,6 +44,7 @@ const menu = [
 
   { name: "Banking", href: "/dashboard/banking" },
   { name: "Reports", href: "/dashboard/reports" },
+  { name: "Analytics", href: "/dashboard/analytics" },
   { name: "Settings", href: "/dashboard/settings" },
 ];
 
@@ -66,7 +67,7 @@ export default function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {menu.map((item) => {
           // 🔹 If item has children (dropdown)
           if (item.children) {
