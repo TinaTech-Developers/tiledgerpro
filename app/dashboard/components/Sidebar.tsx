@@ -63,7 +63,7 @@ export default function Sidebar({
     <aside className="w-64 h-screen bg-[#0F172A] text-white flex flex-col">
       {/* Logo */}
       <div className="p-6 text-xl font-bold border-b border-gray-700">
-        LedgerPro
+        TiLedgerPro
       </div>
 
       {/* Navigation */}

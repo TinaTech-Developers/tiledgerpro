@@ -6,7 +6,10 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
       {/* Left */}
       <div className="flex items-center gap-3">
         {/* Mobile menu button */}
-        <button onClick={onMenuClick} className="md:hidden text-xl">
+        <button
+          onClick={onMenuClick}
+          className="md:hidden text-xl text-gray-800 focus:outline-none"
+        >
           ☰
         </button>
 
