@@ -24,13 +24,24 @@ export default function AccountsPage() {
   // FETCH ACCOUNTS
   // =========================
   const fetchAccounts = async () => {
-    const res = await apiFetch(
-      `/api/accounts?page=${page}&limit=${perPage}&search=${search}`,
-    );
+    try {
+      const res = await apiFetch(
+        `/api/accounts?page=${page}&limit=${perPage}&search=${search}`,
+      );
 
-    setData(res);
+      setData({
+        accounts: Array.isArray(res?.data) ? res.data : [],
+        totalPages: res?.pagination?.totalPages || 1,
+      });
+    } catch (err) {
+      console.error("FETCH ACCOUNTS ERROR:", err);
+
+      setData({
+        accounts: [],
+        totalPages: 1,
+      });
+    }
   };
-
   // =========================
   // INITIAL LOAD + PAGE CHANGE
   // =========================
