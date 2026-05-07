@@ -38,7 +38,9 @@ export default function VendorsPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold">Vendors</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+            Vendors
+          </h1>
           <p className="text-sm text-gray-500">
             Manage your suppliers and partners
           </p>
@@ -57,23 +59,23 @@ export default function VendorsPage() {
 
       {/* SEARCH */}
       <input
-        className="w-full md:max-w-sm border p-2 rounded text-sm"
+        className="w-full md:max-w-sm border p-2 rounded text-sm text-gray-700 border-gray-300 focus:border-gray-500 focus:ring-0"
         placeholder="Search vendors..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
 
       {/* TABLE / CARDS */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow overflow-hidden">
         {/* ================= DESKTOP TABLE ================= */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left">
+            <thead className="bg-gray-400 text-left">
               <tr>
-                <th className="p-3">Name</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Phone</th>
-                <th className="p-3 text-right">Actions</th>
+                <th className="p-3 text-white">Name</th>
+                <th className="p-3 text-white">Email</th>
+                <th className="p-3 text-white">Phone</th>
+                <th className="p-3 text-white text-right">Actions</th>
               </tr>
             </thead>
 
@@ -86,11 +88,14 @@ export default function VendorsPage() {
                 </tr>
               : filtered.map((v) => (
                   <tr key={v.id} className="border-t hover:bg-gray-50">
-                    <td className="p-3 font-medium">{v.name}</td>
-                    <td className="p-3">{v.email || "-"}</td>
-                    <td className="p-3">{v.phone || "-"}</td>
+                    <td className="p-3 text-gray-800 font-medium">{v.name}</td>
+                    <td className="p-3 text-gray-800">{v.email || "-"}</td>
+                    <td className="p-3 text-gray-800">{v.phone || "-"}</td>
 
                     <td className="p-3 text-right">
+                      <button className="mx-2 text-red-600 hover:text-red-900">
+                        Delete
+                      </button>
                       <button
                         onClick={() => {
                           setSelected(v);

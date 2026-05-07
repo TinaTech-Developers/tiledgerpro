@@ -167,7 +167,7 @@ export default function AssetsPage() {
         {filteredAssets.map((a) => (
           <div key={a.id} className="bg-white p-4 rounded-xl border shadow-sm">
             <div className="flex justify-between">
-              <p className="font-semibold">{a.name}</p>
+              <p className="font-semibold text-gray-800">{a.name}</p>
               <span
                 className={`text-xs px-2 py-1 rounded ${
                   a.status === "ACTIVE" ?
@@ -179,18 +179,22 @@ export default function AssetsPage() {
               </span>
             </div>
 
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-800">
               {a.category || "No category"}
             </p>
 
-            <div className="flex justify-between text-sm mt-2">
+            <div className="flex justify-between text-gray-900 text-sm mt-2">
               <span>Cost</span>
-              <span>{formatMoney(a.purchaseCost)}</span>
+              <span className="font-semibold">
+                {formatMoney(a.purchaseCost)}
+              </span>
             </div>
 
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-sm text-gray-900">
               <span>Value</span>
-              <span>{formatMoney(a.currentValue)}</span>
+              <span className="font-semibold">
+                {formatMoney(a.currentValue)}
+              </span>
             </div>
           </div>
         ))}
@@ -213,10 +217,14 @@ export default function AssetsPage() {
           <tbody>
             {filteredAssets.map((a) => (
               <tr key={a.id} className="border-t">
-                <td className="p-3">{a.name}</td>
-                <td>{a.category || "—"}</td>
-                <td>{formatMoney(a.purchaseCost)}</td>
-                <td>{formatMoney(a.currentValue)}</td>
+                <td className="p-3 text-gray-800">{a.name}</td>
+                <td className="p-3 text-gray-600">{a.category || "—"}</td>
+                <td className="p-3 text-gray-600">
+                  {formatMoney(a.purchaseCost)}
+                </td>
+                <td className="p-3 text-gray-600">
+                  {formatMoney(a.currentValue)}
+                </td>
                 <td>
                   <span
                     className={`text-xs px-2 py-1 rounded ${
@@ -228,7 +236,9 @@ export default function AssetsPage() {
                     {a.status}
                   </span>
                 </td>
-                <td>{a.purchaseDate?.split("T")[0] || "—"}</td>
+                <td className="p-3 text-gray-600">
+                  {a.purchaseDate?.split("T")[0] || "—"}
+                </td>
               </tr>
             ))}
           </tbody>

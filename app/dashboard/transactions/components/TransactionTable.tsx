@@ -83,7 +83,7 @@ export default function TransactionTable({
                     </span>
                   </td>
 
-                  <td className="p-4 text-right font-semibold">
+                  <td className="p-4 text-right font-semibold text-gray-800">
                     {formatMoney(t.amount)}
                   </td>
 
@@ -177,7 +177,9 @@ export default function TransactionTable({
               {t.account?.name || "Multiple Accounts"}
             </p>
 
-            <p className="text-sm font-bold">{formatMoney(t.amount)}</p>
+            <p className="text-sm font-bold text-gray-800">
+              {formatMoney(t.amount)}
+            </p>
 
             <p className="text-xs text-gray-400">
               {new Date(t.createdAt).toLocaleDateString()}

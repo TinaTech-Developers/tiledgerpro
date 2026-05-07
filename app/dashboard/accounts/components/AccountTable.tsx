@@ -59,7 +59,7 @@ export default function AccountTable({ accounts, onEdit, onDelete }: any) {
           >
             <div className="flex justify-between">
               <p className="font-semibold text-gray-700">{acc.name}</p>
-              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+              <span className="text-xs bg-gray-100 text-gray-900 px-2 py-1 rounded">
                 {acc.type}
               </span>
             </div>

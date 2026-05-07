@@ -58,34 +58,37 @@ export default function VendorModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-      <div className="bg-white w-full max-w-md p-6 rounded-xl space-y-4">
-        <h2 className="text-xl font-bold">
+      <div className="bg-white w-full max-w-md p-6 rounded-lg space-y-4 m-2">
+        <h2 className="text-xl font-bold text-gray-800">
           {isEdit ? "Edit Vendor" : "New Vendor"}
         </h2>
 
         <input
-          className="w-full border p-2 rounded"
+          className="w-full border border-gray-300 text-gray-800 p-2 rounded"
           placeholder="Vendor name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
 
         <input
-          className="w-full border p-2 rounded"
+          className="w-full border border-gray-300 text-gray-800 p-2 rounded"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
-          className="w-full border p-2 rounded"
+          className="w-full border border-gray-300 text-gray-800 p-2 rounded"
           placeholder="Phone"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
 
         <div className="flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 border rounded">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border rounded bg-red-500 text-white hover:bg-red-700"
+          >
             Cancel
           </button>
 
