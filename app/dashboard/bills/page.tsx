@@ -16,9 +16,7 @@ export default function BillsPage() {
 
   const organizationId = "dec771e0-60bb-478e-86a0-9bf2f5bb2636";
 
-  // =========================
-  // FETCH DATA
-  // =========================
+  // FETCH
   const fetchData = async () => {
     const [billsRes, vendorsRes, accountsRes] = await Promise.all([
       apiFetch(`/api/bills?organizationId=${organizationId}`),
@@ -35,13 +33,10 @@ export default function BillsPage() {
     fetchData();
   }, []);
 
-  // =========================
-  // FILTERED + SEARCHED + SORTED
-  // =========================
+  // FILTERS
   const filteredBills = useMemo(() => {
     let data = [...bills];
 
-    // SEARCH
     if (search) {
       data = data.filter(
         (b) =>
@@ -50,12 +45,10 @@ export default function BillsPage() {
       );
     }
 
-    // STATUS FILTER
     if (status !== "ALL") {
       data = data.filter((b) => b.status === status);
     }
 
-    // SORT
     data.sort((a, b) => {
       if (sort === "amount") return b.totalAmount - a.totalAmount;
       if (sort === "dueDate")
@@ -69,9 +62,7 @@ export default function BillsPage() {
     return data;
   }, [bills, search, status, sort]);
 
-  // =========================
-  // SUMMARY CARDS
-  // =========================
+  // SUMMARY
   const totalOutstanding = bills.reduce(
     (acc, b) => acc + (b.status !== "PAID" ? b.totalAmount : 0),
     0,
@@ -84,13 +75,11 @@ export default function BillsPage() {
   const paidCount = bills.filter((b) => b.status === "PAID").length;
 
   return (
-    <div className="p-6 space-y-6">
-      {/* =========================
-          HEADER
-      ========================= */}
-      <div className="flex justify-between items-center">
+    <div className="p-3 sm:p-6 space-y-6">
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 ">Bills</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Bills</h1>
           <p className="text-sm text-gray-500">
             Manage supplier bills & payables
           </p>
@@ -98,16 +87,14 @@ export default function BillsPage() {
 
         <button
           onClick={() => setShowModal(true)}
-          className="bg-black text-white px-4 py-2 rounded-lg"
+          className="bg-black text-white px-4 py-2 rounded-lg w-full sm:w-auto"
         >
           + Add Bill
         </button>
       </div>
 
-      {/* =========================
-          SUMMARY CARDS
-      ========================= */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* SUMMARY CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-xl shadow">
           <p className="text-sm text-gray-500">Outstanding</p>
           <h2 className="text-xl font-bold text-gray-900">
@@ -126,19 +113,17 @@ export default function BillsPage() {
         </div>
       </div>
 
-      {/* =========================
-          FILTER BAR
-      ========================= */}
-      <div className="flex gap-3 flex-wrap">
+      {/* FILTERS */}
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap bg-white p-3 sm:p-4 rounded-xl shadow">
         <input
-          className="border p-2 rounded text-gray-600 border-gray-300 w-64"
+          className="border p-2 rounded text-gray-600 border-gray-300 w-full sm:w-64"
           placeholder="Search vendor or description..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
         <select
-          className="border p-2 rounded text-gray-600 border-gray-300"
+          className="border p-2 rounded text-gray-600 border-gray-300 w-full sm:w-auto"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
@@ -149,7 +134,7 @@ export default function BillsPage() {
         </select>
 
         <select
-          className="border p-2 rounded text-gray-600 border-gray-300"
+          className="border p-2 rounded text-gray-600 border-gray-300 w-full sm:w-auto"
           value={sort}
           onChange={(e) => setSort(e.target.value)}
         >
@@ -158,17 +143,15 @@ export default function BillsPage() {
         </select>
       </div>
 
-      {/* =========================
-          TABLE
-      ========================= */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full text-sm">
+      {/* TABLE */}
+      <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <table className="min-w-[600px] w-full text-sm">
           <thead className="bg-gray-400 text-left">
             <tr>
-              <th className="p-3">Vendor</th>
-              <th className="p-3">Amount</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Due Date</th>
+              <th className="p-3 text-white">Vendor</th>
+              <th className="p-3 text-white">Amount</th>
+              <th className="p-3 text-white">Status</th>
+              <th className="p-3 text-white">Due Date</th>
             </tr>
           </thead>
 
@@ -182,15 +165,15 @@ export default function BillsPage() {
               return (
                 <tr
                   key={b.id}
-                  className={`border-t ${isOverdue ? "bg-red-50" : ""}`}
+                  className={`border-t ${isOverdue ? "bg-white" : ""}`}
                 >
-                  <td className="p-3 text-gray-600  font-medium">
+                  <td className="p-3 text-gray-600 font-medium">
                     {b.vendor?.name}
                   </td>
 
-                  <td className="p-3 text-gray-600 ">${b.totalAmount}</td>
+                  <td className="p-3 text-gray-600">${b.totalAmount}</td>
 
-                  <td className="p-3 text-gray-600 ">
+                  <td className="p-3">
                     <span
                       className={`px-2 py-1 rounded text-xs ${
                         b.status === "PAID" ? "bg-green-100 text-green-700"
@@ -213,9 +196,7 @@ export default function BillsPage() {
         </table>
       </div>
 
-      {/* =========================
-          MODAL
-      ========================= */}
+      {/* MODAL */}
       {showModal && (
         <AddBillModal
           vendors={vendors}

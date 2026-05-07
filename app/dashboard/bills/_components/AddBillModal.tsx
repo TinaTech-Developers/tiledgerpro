@@ -53,12 +53,12 @@ export default function AddBillModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-lg p-6 rounded-xl space-y-4 shadow-xl">
-        <h2 className="text-xl font-bold">Add Bill</h2>
+      <div className="bg-white w-full max-w-lg p-6 rounded-lg space-y-4 shadow-xl m-2">
+        <h2 className="text-xl font-bold text-gray-800">Add Bill</h2>
 
         {/* Vendor */}
         <select
-          className="w-full border p-2 rounded"
+          className="w-full border border-gray-300 text-gray-800 p-2 rounded"
           value={vendorId}
           onChange={(e) => setVendorId(e.target.value)}
         >
@@ -75,7 +75,7 @@ export default function AddBillModal({
         {/* Amount */}
         <input
           type="number"
-          className="w-full border p-2 rounded"
+          className="w-full border border-gray-300 text-gray-800 p-2 rounded"
           placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(Number(e.target.value))}
@@ -84,14 +84,14 @@ export default function AddBillModal({
         {/* Due Date */}
         <input
           type="date"
-          className="w-full border p-2 rounded"
+          className="w-full border border-gray-300 text-gray-800 p-2 rounded"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
         />
 
         {/* Description */}
         <textarea
-          className="w-full border p-2 rounded"
+          className="w-full border border-gray-300 text-gray-800 p-2 rounded"
           placeholder="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -99,7 +99,10 @@ export default function AddBillModal({
 
         {/* Actions */}
         <div className="flex justify-end gap-3">
-          <button onClick={onClose} className="px-3 py-2 border rounded">
+          <button
+            onClick={onClose}
+            className="px-3 py-2 border bg-red-500 text-white hover:bg-red-700 rounded"
+          >
             Cancel
           </button>
 
