@@ -249,7 +249,9 @@ export default function ExpensesPage() {
           <div className="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 space-y-4">
             {/* HEADER */}
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Add Expense</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Add Expense
+              </h2>
               <button onClick={() => setOpen(false)}>✕</button>
             </div>
 
@@ -257,7 +259,7 @@ export default function ExpensesPage() {
             <input
               type="number"
               placeholder="Amount"
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded border-gray-300 text-gray-800"
               value={form.amount}
               onChange={(e) => setForm({ ...form, amount: e.target.value })}
             />
@@ -265,14 +267,14 @@ export default function ExpensesPage() {
             {/* CATEGORY */}
             <input
               placeholder="Category (e.g Rent, Fuel, Salary)"
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded border-gray-300 text-gray-800"
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
             />
 
             {/* ACCOUNT */}
             <select
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded border-gray-300 text-gray-800"
               value={form.accountId}
               onChange={(e) => setForm({ ...form, accountId: e.target.value })}
             >
@@ -289,7 +291,7 @@ export default function ExpensesPage() {
             </select>
             {/* CASH / BANK ACCOUNT */}
             <select
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded border-gray-300 text-gray-800"
               value={form.cashAccountId}
               onChange={(e) =>
                 setForm({ ...form, cashAccountId: e.target.value })
@@ -311,7 +313,7 @@ export default function ExpensesPage() {
             {/* DATE */}
             <input
               type="date"
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded border-gray-300 text-gray-800"
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
             />
@@ -319,7 +321,7 @@ export default function ExpensesPage() {
             {/* NOTES */}
             <textarea
               placeholder="Notes (optional)"
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded border-gray-300 text-gray-800"
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
             />
@@ -328,7 +330,7 @@ export default function ExpensesPage() {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setOpen(false)}
-                className="px-4 py-2 border rounded"
+                className="px-4 py-2 border rounded bg-red-500 text-white hover:bg-red-700"
               >
                 Cancel
               </button>
