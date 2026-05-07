@@ -34,7 +34,7 @@ export default function AccountModal({ account, onClose, onSuccess }: any) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center p-3">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-3">
       <div className="bg-white p-5 rounded-xl w-full sm:max-w-md space-y-4 shadow-lg">
         <h2 className="text-lg font-bold text-gray-900">
           {account ? "Edit Account" : "New Account"}

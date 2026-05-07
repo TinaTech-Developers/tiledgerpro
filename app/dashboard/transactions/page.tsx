@@ -17,13 +17,19 @@ export default function TransactionsPage() {
   const [endDate, setEndDate] = useState("");
 
   const fetchData = async () => {
-    const [txns, accs] = await Promise.all([
-      apiFetch("/api/transactions"),
-      apiFetch("/api/accounts"),
-    ]);
+    try {
+      const [txnsRes, accsRes] = await Promise.all([
+        apiFetch("/api/transactions"),
+        apiFetch("/api/accounts?page=1&limit=100"),
+      ]);
 
-    setTransactions(Array.isArray(txns) ? txns : []);
-    setAccounts(Array.isArray(accs) ? accs : []);
+      console.log("RAW ACCOUNTS RESPONSE:", accsRes);
+
+      setTransactions(txnsRes?.data ?? txnsRes ?? []);
+      setAccounts(accsRes?.data ?? accsRes ?? []);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -31,10 +37,13 @@ export default function TransactionsPage() {
   }, []);
 
   const filteredTransactions = useMemo(() => {
-    return transactions.filter((t) => {
+    const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
+    return safeTransactions.filter((t) => {
       const matchesSearch =
-        t.notes?.toLowerCase().includes(search.toLowerCase()) ||
-        t.account?.name?.toLowerCase().includes(search.toLowerCase());
+        t.notes?.toLowerCase()?.includes(search.toLowerCase()) ||
+        t.account?.name?.toLowerCase()?.includes(search.toLowerCase()) ||
+        false;
 
       const matchesAccount =
         accountFilter ? t.account?.id === accountFilter : true;
@@ -48,7 +57,6 @@ export default function TransactionsPage() {
       return matchesSearch && matchesAccount && matchesType && matchesDate;
     });
   }, [transactions, search, accountFilter, typeFilter, startDate, endDate]);
-
   return (
     <div className="p-4 md:p-6 bg-gray-100 min-h-screen space-y-6">
       {/* HEADER */}

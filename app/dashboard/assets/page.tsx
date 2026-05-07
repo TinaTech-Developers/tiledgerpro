@@ -247,20 +247,20 @@ export default function AssetsPage() {
 
       {/* ================= MODAL ================= */}
       {open && (
-        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white w-full sm:max-w-lg sm:rounded-xl rounded-t-2xl p-6 space-y-3 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold">Add Asset</h2>
+            <h2 className="text-lg font-semibold text-gray-800">Add Asset</h2>
 
             <input
               placeholder="Asset Name"
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded text-gray-800 border-gray-300"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
 
             <input
               placeholder="Category"
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded text-gray-800 border-gray-300"
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
             />
@@ -268,7 +268,7 @@ export default function AssetsPage() {
             <input
               type="number"
               placeholder="Purchase Cost"
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded text-gray-800 border-gray-300"
               value={form.purchaseCost}
               onChange={(e) =>
                 setForm({ ...form, purchaseCost: e.target.value })
@@ -277,7 +277,7 @@ export default function AssetsPage() {
 
             <input
               type="date"
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded text-gray-800 border-gray-300"
               value={form.purchaseDate}
               onChange={(e) =>
                 setForm({ ...form, purchaseDate: e.target.value })
@@ -287,7 +287,7 @@ export default function AssetsPage() {
             <input
               type="number"
               placeholder="Useful Life"
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded text-gray-800 border-gray-300"
               value={form.usefulLife}
               onChange={(e) => setForm({ ...form, usefulLife: e.target.value })}
             />

@@ -3,7 +3,6 @@ export const apiFetch = async (url: string, options: any = {}) => {
 
   const res = await fetch(url, {
     ...options,
-
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -11,11 +10,12 @@ export const apiFetch = async (url: string, options: any = {}) => {
     },
   });
 
-  if (res.status === 401) {
-    alert("Session expired. Please login again.");
-    window.location.href = "/login";
-    return;
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("API ERROR:", data);
+    throw new Error(data?.error || "API Error");
   }
 
-  return res.json();
+  return data;
 };
