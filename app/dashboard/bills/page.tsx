@@ -8,7 +8,8 @@ export default function BillsPage() {
   const [bills, setBills] = useState<any[]>([]);
   const [vendors, setVendors] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
-  const [showModal, setShowModal] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("ALL");
@@ -18,15 +19,25 @@ export default function BillsPage() {
 
   // FETCH
   const fetchData = async () => {
-    const [billsRes, vendorsRes, accountsRes] = await Promise.all([
-      apiFetch(`/api/bills?organizationId=${organizationId}`),
-      apiFetch(`/api/vendors?organizationId=${organizationId}`),
-      apiFetch(`/api/accounts?organizationId=${organizationId}`),
-    ]);
+    try {
+      setLoading(true);
 
-    setBills(billsRes);
-    setVendors(vendorsRes);
-    setAccounts(accountsRes);
+      const [billsRes, vendorsRes, accountsRes] = await Promise.all([
+        apiFetch(`/api/bills?organizationId=${organizationId}`),
+        apiFetch(`/api/vendors?organizationId=${organizationId}`),
+        apiFetch(`/api/accounts?organizationId=${organizationId}`),
+      ]);
+
+      setBills(Array.isArray(billsRes) ? billsRes : (billsRes?.data ?? []));
+      setVendors(
+        Array.isArray(vendorsRes) ? vendorsRes : (vendorsRes?.data ?? []),
+      );
+      setAccounts(
+        Array.isArray(accountsRes) ? accountsRes : (accountsRes?.data ?? []),
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -75,55 +86,55 @@ export default function BillsPage() {
   const paidCount = bills.filter((b) => b.status === "PAID").length;
 
   return (
-    <div className="p-3 sm:p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6 bg-gray-100 min-h-screen">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Bills</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-800">Bills</h1>
           <p className="text-sm text-gray-500">
             Manage supplier bills & payables
           </p>
         </div>
 
         <button
-          onClick={() => setShowModal(true)}
-          className="bg-black text-white px-4 py-2 rounded-lg w-full sm:w-auto"
+          onClick={() => setOpen(true)}
+          className="bg-black text-white px-4 py-2 rounded w-full md:w-auto"
         >
           + Add Bill
         </button>
       </div>
 
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className="bg-white p-4 rounded-xl shadow">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="bg-white p-4 rounded-lg shadow">
           <p className="text-sm text-gray-500">Outstanding</p>
           <h2 className="text-xl font-bold text-gray-900">
             ${totalOutstanding}
           </h2>
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow">
+        <div className="bg-white p-4 rounded-lg shadow">
           <p className="text-sm text-gray-500">Overdue</p>
           <h2 className="text-xl font-bold text-red-500">{overdueCount}</h2>
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow">
+        <div className="bg-white p-4 rounded-lg shadow">
           <p className="text-sm text-gray-500">Paid</p>
           <h2 className="text-xl font-bold text-green-600">{paidCount}</h2>
         </div>
       </div>
 
       {/* FILTERS */}
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap bg-white p-3 sm:p-4 rounded-xl shadow">
+      <div className="flex flex-col md:flex-row gap-3 bg-white p-3 md:p-4 rounded-lg shadow">
         <input
-          className="border p-2 rounded text-gray-600 border-gray-300 w-full sm:w-64"
+          className="w-full md:max-w-sm border p-2 rounded text-sm text-gray-700 border-gray-300"
           placeholder="Search vendor or description..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
         <select
-          className="border p-2 rounded text-gray-600 border-gray-300 w-full sm:w-auto"
+          className="border p-2 rounded text-sm text-gray-700 border-gray-300"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
@@ -134,7 +145,7 @@ export default function BillsPage() {
         </select>
 
         <select
-          className="border p-2 rounded text-gray-600 border-gray-300 w-full sm:w-auto"
+          className="border p-2 rounded text-sm text-gray-700 border-gray-300"
           value={sort}
           onChange={(e) => setSort(e.target.value)}
         >
@@ -143,9 +154,9 @@ export default function BillsPage() {
         </select>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded-lg shadow overflow-x-auto">
-        <table className="min-w-[600px] w-full text-sm">
+      {/* ================= DESKTOP TABLE ================= */}
+      <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+        <table className="w-full text-sm">
           <thead className="bg-gray-400 text-left">
             <tr>
               <th className="p-3 text-white">Vendor</th>
@@ -156,55 +167,110 @@ export default function BillsPage() {
           </thead>
 
           <tbody>
-            {filteredBills.map((b) => {
-              const isOverdue =
-                b.status !== "PAID" &&
-                b.dueDate &&
-                new Date(b.dueDate) < new Date();
+            {loading ?
+              <tr>
+                <td colSpan={4} className="p-4 text-center">
+                  Loading...
+                </td>
+              </tr>
+            : filteredBills.map((b) => {
+                const isOverdue =
+                  b.status !== "PAID" &&
+                  b.dueDate &&
+                  new Date(b.dueDate) < new Date();
 
-              return (
-                <tr
-                  key={b.id}
-                  className={`border-t ${isOverdue ? "bg-white" : ""}`}
-                >
-                  <td className="p-3 text-gray-600 font-medium">
-                    {b.vendor?.name}
-                  </td>
+                return (
+                  <tr
+                    key={b.id}
+                    className={`border-t ${isOverdue ? "bg-red-50" : ""}`}
+                  >
+                    <td className="p-3 text-gray-700 font-medium">
+                      {b.vendor?.name}
+                    </td>
 
-                  <td className="p-3 text-gray-600">${b.totalAmount}</td>
+                    <td className="p-3 text-gray-700">${b.totalAmount}</td>
 
-                  <td className="p-3">
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        b.status === "PAID" ? "bg-green-100 text-green-700"
-                        : b.status === "PARTIAL" ?
-                          "bg-yellow-100 text-yellow-700"
-                        : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {b.status}
-                    </span>
-                  </td>
+                    <td className="p-3">
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          b.status === "PAID" ? "bg-green-100 text-green-700"
+                          : b.status === "PARTIAL" ?
+                            "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {b.status}
+                      </span>
+                    </td>
 
-                  <td className="p-3 text-gray-600">
-                    {b.dueDate ? new Date(b.dueDate).toLocaleDateString() : "-"}
-                  </td>
-                </tr>
-              );
-            })}
+                    <td className="p-3 text-gray-700">
+                      {b.dueDate ?
+                        new Date(b.dueDate).toLocaleDateString()
+                      : "-"}
+                    </td>
+                  </tr>
+                );
+              })
+            }
           </tbody>
         </table>
       </div>
 
+      {/* ================= MOBILE CARDS ================= */}
+      <div className="md:hidden space-y-3">
+        {loading ?
+          <div className="text-center p-4">Loading...</div>
+        : filteredBills.map((b) => {
+            const isOverdue =
+              b.status !== "PAID" &&
+              b.dueDate &&
+              new Date(b.dueDate) < new Date();
+
+            return (
+              <div
+                key={b.id}
+                className={`bg-white p-4 rounded-lg shadow space-y-2 ${
+                  isOverdue ? "border-l-4 border-red-500" : ""
+                }`}
+              >
+                <p className="font-semibold text-gray-800">{b.vendor?.name}</p>
+
+                <p className="text-sm text-gray-600">
+                  Amount: ${b.totalAmount}
+                </p>
+
+                <p className="text-sm">
+                  Status:{" "}
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${
+                      b.status === "PAID" ? "bg-green-100 text-green-700"
+                      : b.status === "PARTIAL" ? "bg-yellow-100 text-yellow-700"
+                      : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {b.status}
+                  </span>
+                </p>
+
+                <p className="text-sm text-gray-600">
+                  Due:{" "}
+                  {b.dueDate ? new Date(b.dueDate).toLocaleDateString() : "-"}
+                </p>
+              </div>
+            );
+          })
+        }
+      </div>
+
       {/* MODAL */}
-      {showModal && (
+      {open && (
         <AddBillModal
           vendors={vendors}
           accounts={accounts}
           organizationId={organizationId}
-          onClose={() => setShowModal(false)}
+          onClose={() => setOpen(false)}
           onSuccess={() => {
-            setShowModal(false);
+            setOpen(false);
             fetchData();
           }}
         />
