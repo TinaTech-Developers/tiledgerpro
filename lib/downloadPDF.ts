@@ -1,18 +1,77 @@
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+
 export const downloadPDF = async (elementId: string) => {
-  if (typeof window === "undefined") return;
+  try {
+    const input = document.getElementById(elementId);
 
-  const html2pdf = (await import("html2pdf.js")).default;
+    if (!input) {
+      alert("PDF element not found");
+      return;
+    }
 
-  const element = document.getElementById(elementId);
-  if (!element) return;
+    // =========================
+    // CREATE CLEAN CLONE
+    // =========================
+    const clone = input.cloneNode(true) as HTMLElement;
 
-  html2pdf()
-    .from(element)
-    .set({
-      margin: 10,
-      filename: "quotation.pdf",
-      html2canvas: { scale: 2 },
-      jsPDF: { format: "a4", orientation: "portrait" },
-    })
-    .save();
+    clone.style.background = "#ffffff";
+    clone.style.color = "#000000";
+    clone.style.position = "fixed";
+    clone.style.left = "-10000px";
+    clone.style.top = "0";
+    clone.style.width = "210mm";
+
+    // =========================
+    // STRIP PROBLEMATIC STYLES
+    // =========================
+    const all = clone.querySelectorAll("*");
+
+    all.forEach((el: any) => {
+      const style = el.style;
+
+      // REMOVE MODERN CSS THAT BREAKS HTML2CANVAS
+      style.filter = "none";
+      style.backdropFilter = "none";
+      style.boxShadow = "none";
+      style.textShadow = "none";
+      style.mixBlendMode = "normal";
+      style.transform = "none";
+
+      // FORCE SAFE COLORS
+      if (style.color?.includes("lab")) style.color = "#000000";
+      if (style.backgroundColor?.includes("lab"))
+        style.backgroundColor = "#ffffff";
+    });
+
+    document.body.appendChild(clone);
+
+    // =========================
+    // WAIT FOR RENDER
+    // =========================
+    await new Promise((r) => setTimeout(r, 300));
+
+    const canvas = await html2canvas(clone, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+    });
+
+    document.body.removeChild(clone);
+
+    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pdfWidth = 210;
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+
+    pdf.save("quotation.pdf");
+  } catch (err) {
+    console.error("PDF ERROR:", err);
+    alert("Failed to generate PDF");
+  }
 };

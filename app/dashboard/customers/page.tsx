@@ -18,9 +18,13 @@ export default function CustomersPage() {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(false);
 
+  const organizationId = "dec771e0-60bb-478e-86a0-9bf2f5bb2636";
+
   const fetchData = async () => {
     try {
-      const data = await apiFetch("/api/customers");
+      const data = await apiFetch(
+        `/api/customers?organizationId=${organizationId}`,
+      );
       setCustomers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("FETCH ERROR:", err);

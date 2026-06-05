@@ -13,76 +13,85 @@ export default function QuotationPreview({ quotation }: any) {
 
   return (
     <div
-      id="pdf"
-      className="bg-white text-sm shadow"
+      id="quotation"
       style={{
         width: "210mm",
         minHeight: "297mm",
         padding: "20mm",
+        backgroundColor: "#ffffff",
+        color: "#111827",
+        fontSize: "12px",
       }}
     >
       {/* ================= HEADER ================= */}
-      <div className="flex justify-between mb-10">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 40,
+        }}
+      >
         <div>
           <Image
             src="/logo.png"
             alt="Logo"
             width={120}
             height={40}
-            className="mb-3"
+            loading="eager"
+            style={{ width: "auto", height: "auto", marginBottom: 10 }}
           />
 
-          <p className="text-gray-600">+263 712 471 209</p>
-          <p className="text-gray-600">+263 773 059 753</p>
-          <p className="text-gray-600">sales@tinasoftnexus.co.zw</p>
-          <p className="text-gray-600">Belvedere, Harare</p>
+          <p style={{ color: "#4b5563" }}>+263 712 471 209</p>
+          <p style={{ color: "#4b5563" }}>+263 773 059 753</p>
+          <p style={{ color: "#4b5563" }}>sales@tinasoftnexus.co.zw</p>
+          <p style={{ color: "#4b5563" }}>Belvedere, Harare</p>
         </div>
 
-        <div className="text-right">
-          <h1 className="text-2xl font-bold text-gray-800">QUOTATION</h1>
+        <div style={{ textAlign: "right" }}>
+          <h1 style={{ fontSize: 22, fontWeight: "bold" }}>QUOTATION</h1>
 
-          <p className="mt-2 text-gray-700">
+          <p>
             <strong>No:</strong> {quotation.id?.slice(0, 8)}
           </p>
 
-          <p className="text-gray-600">
+          <p style={{ color: "#6b7280" }}>
             <strong>Date:</strong>{" "}
             {new Date(quotation.createdAt).toLocaleDateString()}
           </p>
 
-          <p className="text-gray-600">
+          <p style={{ color: "#6b7280" }}>
             <strong>Status:</strong> {quotation.status}
           </p>
         </div>
       </div>
 
       {/* ================= CUSTOMER ================= */}
-      <div className="mb-8">
-        <h3 className="font-semibold mb-2 text-gray-700">Quote To:</h3>
+      <div style={{ marginBottom: 30 }}>
+        <h3 style={{ fontWeight: 600, marginBottom: 8 }}>Quote To:</h3>
 
-        <p className="font-medium text-gray-500">
+        <p style={{ fontWeight: 500 }}>
           {quotation.customer?.name || "Walk-in Customer"}
         </p>
 
         {quotation.customer?.phone && (
-          <p className="text-gray-500">Phone: {quotation.customer.phone}</p>
+          <p style={{ color: "#6b7280" }}>Phone: {quotation.customer.phone}</p>
         )}
 
         {quotation.customer?.email && (
-          <p className="text-gray-500">Email: {quotation.customer.email}</p>
+          <p style={{ color: "#6b7280" }}>Email: {quotation.customer.email}</p>
         )}
       </div>
 
       {/* ================= TABLE ================= */}
-      <table className="w-full border text-sm mb-6">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="border p-2 border-gray-300 text-gray-800 text-left">
-              Description (Product / Service)
-            </th>
-            <th className="border p-2 border-gray-300 text-gray-800">Qty</th>
-            <th className="border p-2 border-gray-300 text-gray-800">Price</th>
-            <th className="border p-2 border-gray-300 text-gray-800">Total</th>
+      <table
+        style={{ width: "100%", borderCollapse: "collapse", marginBottom: 20 }}
+      >
+        <thead>
+          <tr style={{ backgroundColor: "#e5e7eb" }}>
+            <th style={th}>Description</th>
+            <th style={th}>Qty</th>
+            <th style={th}>Price</th>
+            <th style={th}>Total</th>
           </tr>
         </thead>
 
@@ -90,28 +99,18 @@ export default function QuotationPreview({ quotation }: any) {
           {items.length > 0 ?
             items.map((item: any) => (
               <tr key={item.id}>
-                <td className="border p-2 text-gray-600 border-gray-300">
+                <td style={td}>
                   {item.description || item.product?.name || "Service"}
                 </td>
-
-                <td className="border p-2 text-gray-600 border-gray-300 text-center">
-                  {item.quantity}
-                </td>
-
-                <td className="border p-2 text-gray-600 border-gray-300 text-center">
-                  {item.price.toFixed(2)}
-                </td>
-
-                <td className="border p-2 text-gray-600 border-gray-300 text-right">
+                <td style={tdCenter}>{item.quantity}</td>
+                <td style={tdCenter}>{item.price.toFixed(2)}</td>
+                <td style={tdRight}>
                   {(item.quantity * item.price).toFixed(2)}
                 </td>
               </tr>
             ))
           : <tr>
-              <td
-                colSpan={4}
-                className="text-center text-gray-600 border-gray-300 p-4"
-              >
+              <td colSpan={4} style={{ padding: 10, textAlign: "center" }}>
                 No items found
               </td>
             </tr>
@@ -120,23 +119,37 @@ export default function QuotationPreview({ quotation }: any) {
       </table>
 
       {/* ================= TOTAL ================= */}
-      <div className="flex justify-end mb-10">
-        <div className="w-64 border-t pt-3 border-gray-300">
-          <div className="flex justify-between text-gray-700">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: 30,
+        }}
+      >
+        <div
+          style={{ width: 250, borderTop: "1px solid #d1d5db", paddingTop: 10 }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span>Subtotal</span>
             <span>{subtotal.toFixed(2)}</span>
           </div>
 
-          <div className="flex justify-between font-bold text-lg mt-2 text-gray-700">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontWeight: "bold",
+            }}
+          >
             <span>Total</span>
             <span>{subtotal.toFixed(2)}</span>
           </div>
         </div>
       </div>
 
-      {/* ================= TERMS ================= */}
-      <div className="mb-10 text-xs text-gray-700">
-        <h4 className="font-semibold mb-1">Terms & Conditions</h4>
+      {/* ================= TERMS & CONDITIONS (RESTORED) ================= */}
+      <div style={{ fontSize: 11, color: "#374151", marginBottom: 40 }}>
+        <h4 style={{ fontWeight: 600, marginBottom: 5 }}>Terms & Conditions</h4>
 
         <p>• 40% deposit required before project start.</p>
         <p>• Valid for 30 days from issue date.</p>
@@ -144,16 +157,45 @@ export default function QuotationPreview({ quotation }: any) {
       </div>
 
       {/* ================= FOOTER ================= */}
-      <div className="flex justify-between mt-16 text-xs text-gray-600">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontSize: 11,
+          color: "#6b7280",
+        }}
+      >
         <div>
           <p>Signature: _______________________</p>
         </div>
 
-        <div className="text-right">
+        <div style={{ textAlign: "right" }}>
           <p>Thank you for your business</p>
-          <p className="font-semibold">TinaSoft Nexus</p>
+          <p style={{ fontWeight: 600 }}>TinaSoft Nexus</p>
         </div>
       </div>
     </div>
   );
 }
+
+/* SAFE TABLE STYLES */
+const th: any = {
+  border: "1px solid #d1d5db",
+  padding: 8,
+  textAlign: "left",
+};
+
+const td: any = {
+  border: "1px solid #d1d5db",
+  padding: 8,
+};
+
+const tdCenter: any = {
+  ...td,
+  textAlign: "center",
+};
+
+const tdRight: any = {
+  ...td,
+  textAlign: "right",
+};

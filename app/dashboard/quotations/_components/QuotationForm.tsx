@@ -33,6 +33,7 @@ export default function QuotationForm({ customers, products }: any) {
       method: "POST",
       body: JSON.stringify({
         customerId,
+        organizationId: "dec771e0-60bb-478e-86a0-9bf2f5bb2636",
         items,
       }),
     });
@@ -46,7 +47,7 @@ export default function QuotationForm({ customers, products }: any) {
       <select
         value={customerId}
         onChange={(e) => setCustomerId(e.target.value)}
-        className="border p-2 w-full"
+        className="border p-2 w-full text-gray-700 border-gray-300"
       >
         <option value="">Select Customer</option>
         {customers.map((c: any) => (
@@ -63,21 +64,21 @@ export default function QuotationForm({ customers, products }: any) {
             placeholder="Service / Product"
             value={item.description}
             onChange={(e) => updateItem(i, "description", e.target.value)}
-            className="border p-2"
+            className="border p-2 text-gray-600 border-gray-300"
           />
 
           <input
             type="number"
             value={item.quantity}
             onChange={(e) => updateItem(i, "quantity", Number(e.target.value))}
-            className="border p-2"
+            className="border p-2 text-gray-600 border-gray-300"
           />
 
           <input
             type="number"
             value={item.price}
             onChange={(e) => updateItem(i, "price", Number(e.target.value))}
-            className="border p-2"
+            className="border p-2 text-gray-600 border-gray-300"
           />
 
           <div className="flex items-center justify-between">
@@ -98,7 +99,9 @@ export default function QuotationForm({ customers, products }: any) {
       </button>
 
       {/* TOTAL */}
-      <div className="text-right font-bold text-lg">Total: ${total}</div>
+      <div className="text-right font-bold text-lg text-gray-800">
+        Total: ${total}
+      </div>
 
       <button
         onClick={handleSubmit}

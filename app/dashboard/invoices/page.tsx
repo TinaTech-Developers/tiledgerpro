@@ -20,8 +20,10 @@ export default function InvoicesPage() {
       setLoading(true);
 
       const [invRes, custRes, prodRes] = await Promise.allSettled([
-        apiFetch("/api/invoices"),
-        apiFetch("/api/customers"),
+        apiFetch(`/api/invoices?organizationId=${organizationId}`),
+
+        apiFetch(`/api/customers?organizationId=${organizationId}`),
+
         apiFetch(`/api/products?organizationId=${organizationId}`),
       ]);
 

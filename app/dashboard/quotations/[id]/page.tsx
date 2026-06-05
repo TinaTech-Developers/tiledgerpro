@@ -5,18 +5,23 @@ import { useParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import QuotationPreview from "../_components/QuotationPreview";
 import { downloadPDF } from "@/lib/downloadPDF";
+import QuotationPDFButton from "../_components/QuotationPDFButton";
 
 export default function QuotationViewPage() {
   const { id } = useParams();
   const [quotation, setQuotation] = useState<any>(null);
   const [zoom, setZoom] = useState(100);
 
+  const organizationId = "dec771e0-60bb-478e-86a0-9bf2f5bb2636";
+
   useEffect(() => {
     if (!id) return;
 
-    apiFetch(`/api/quotations?id=${id}`).then((data) => {
-      if (!data?.error) setQuotation(data);
-    });
+    apiFetch(`/api/quotations?id=${id}&organizationId=${organizationId}`).then(
+      (data) => {
+        if (!data?.error) setQuotation(data);
+      },
+    );
   }, [id]);
 
   if (!quotation) return <p className="p-6">Loading...</p>;
@@ -48,13 +53,13 @@ export default function QuotationViewPage() {
             +
           </button>
         </div>
-
-        <button
+        <QuotationPDFButton />
+        {/* <button
           onClick={() => downloadPDF("pdf")}
           className="bg-black text-white px-4 py-2 rounded"
         >
           Download PDF
-        </button>
+        </button> */}
       </div>
 
       {/* ================= VIEWER ================= */}

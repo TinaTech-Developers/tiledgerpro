@@ -15,8 +15,10 @@ export default function QuotationsPage() {
 
   const router = useRouter();
 
+  const organizationId = "dec771e0-60bb-478e-86a0-9bf2f5bb2636";
+
   useEffect(() => {
-    apiFetch("/api/quotations").then(setData);
+    apiFetch(`/api/quotations?organizationId=${organizationId}`).then(setData);
   }, []);
 
   const filtered = useMemo(() => {

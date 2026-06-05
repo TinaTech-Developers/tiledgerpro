@@ -1,51 +1,44 @@
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "./../../../lib/prisma";
-import { verifyToken } from "@/lib/jwt";
+import { prisma } from "../../../lib/prisma";
 
 // =========================
-// 🔐 AUTH HELPER
-// =========================
-function getUser(req: NextRequest) {
-  const auth = req.headers.get("authorization");
-
-  if (!auth?.startsWith("Bearer ")) return null;
-
-  const token = auth.split(" ")[1];
-  const decoded = verifyToken(token);
-
-  if (!decoded) return null;
-
-  return decoded; // AuthUser
-}
-
-// =========================
-// 📥 GET (ALL OR ONE)
+// 📥 GET QUOTATIONS
 // =========================
 export async function GET(req: NextRequest) {
   try {
-    const user = getUser(req);
+    const organizationId = req.nextUrl.searchParams.get("organizationId");
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const id = req.nextUrl.searchParams.get("id");
+
+    // ✅ VALIDATION
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: "organizationId required" },
+        { status: 400 },
+      );
     }
 
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-
     // =========================
-    // 🔎 GET ONE QUOTATION
+    // 🔎 GET SINGLE QUOTATION
     // =========================
     if (id) {
       const quotation = await prisma.quotation.findFirst({
         where: {
           id,
-          organizationId: user.organizationId,
+          organizationId,
         },
+
         include: {
           customer: true,
+
           organization: true,
+
           quotationItems: {
-            include: { product: true },
+            include: {
+              product: true,
+            },
           },
         },
       });
@@ -65,11 +58,13 @@ export async function GET(req: NextRequest) {
     // =========================
     const quotations = await prisma.quotation.findMany({
       where: {
-        organizationId: user.organizationId,
+        organizationId,
       },
+
       include: {
         customer: true,
       },
+
       orderBy: {
         createdAt: "desc",
       },
@@ -78,6 +73,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(quotations);
   } catch (err) {
     console.error("GET QUOTATIONS ERROR:", err);
+
     return NextResponse.json(
       { error: "Failed to fetch quotations" },
       { status: 500 },
@@ -90,28 +86,38 @@ export async function GET(req: NextRequest) {
 // =========================
 export async function POST(req: NextRequest) {
   try {
-    const user = getUser(req);
+    const body = await req.json();
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { customerId, organizationId, items } = body;
+
+    // ✅ VALIDATION
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: "organizationId required" },
+        { status: 400 },
+      );
     }
 
-    const body = await req.json();
-    const { customerId, items } = body;
+    if (!customerId) {
+      return NextResponse.json(
+        { error: "customerId required" },
+        { status: 400 },
+      );
+    }
 
-    // ✅ validation
-    if (!customerId || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: "Items required" }, { status: 400 });
     }
 
     // =========================
     // 💰 CALCULATE TOTAL
     // =========================
-    const total = items.reduce(
-      (sum: number, i: any) =>
-        sum + Number(i.quantity || 0) * Number(i.price || 0),
-      0,
-    );
+    const totalAmount = items.reduce((sum: number, item: any) => {
+      const qty = Number(item.quantity || 0);
+      const price = Number(item.price || 0);
+
+      return sum + qty * price;
+    }, 0);
 
     // =========================
     // 🧾 CREATE QUOTATION
@@ -119,34 +125,125 @@ export async function POST(req: NextRequest) {
     const quotation = await prisma.quotation.create({
       data: {
         customerId,
-        organizationId: user.organizationId,
-        totalAmount: total,
+
+        organizationId,
+
+        totalAmount,
+
         status: "PENDING",
 
         quotationItems: {
-          create: items.map((i: any) => ({
-            // ✅ SUPPORT SERVICES (no productId required)
-            productId: i.productId || null,
-            description: i.description || null,
-            quantity: Number(i.quantity || 0),
-            price: Number(i.price || 0),
+          create: items.map((item: any) => ({
+            productId: item.productId || null,
+
+            description: item.description || "",
+
+            quantity: Number(item.quantity || 0),
+
+            price: Number(item.price || 0),
           })),
         },
       },
+
       include: {
         customer: true,
+
         organization: true,
+
         quotationItems: {
-          include: { product: true },
+          include: {
+            product: true,
+          },
         },
       },
     });
 
     return NextResponse.json(quotation, { status: 201 });
-  } catch (err) {
+  } catch (err: any) {
     console.error("POST QUOTATION ERROR:", err);
+
     return NextResponse.json(
-      { error: "Failed to create quotation" },
+      {
+        error: err.message || "Failed to create quotation",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+// =========================
+// ✏️ UPDATE QUOTATION
+// =========================
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    const { id, status } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Quotation ID required" },
+        { status: 400 },
+      );
+    }
+
+    const quotation = await prisma.quotation.update({
+      where: { id },
+
+      data: {
+        ...(status && { status }),
+      },
+    });
+
+    return NextResponse.json(quotation);
+  } catch (err) {
+    console.error("PATCH QUOTATION ERROR:", err);
+
+    return NextResponse.json(
+      { error: "Failed to update quotation" },
+      { status: 500 },
+    );
+  }
+}
+
+// =========================
+// ❌ DELETE QUOTATION
+// =========================
+export async function DELETE(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Quotation ID required" },
+        { status: 400 },
+      );
+    }
+
+    // delete items first
+    await prisma.quotationItem.deleteMany({
+      where: {
+        quotationId: id,
+      },
+    });
+
+    // delete quotation
+    await prisma.quotation.delete({
+      where: {
+        id,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+    });
+  } catch (err) {
+    console.error("DELETE QUOTATION ERROR:", err);
+
+    return NextResponse.json(
+      { error: "Failed to delete quotation" },
       { status: 500 },
     );
   }

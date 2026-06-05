@@ -7,11 +7,22 @@ import { InvoiceStatus } from "@prisma/client"; // import enum
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
+
+    const organizationId = url.searchParams.get("organizationId");
+
     const customerId = url.searchParams.get("customerId");
+
     const statusParam = url.searchParams.get("status");
 
-    // Convert string to InvoiceStatus enum if valid
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: "organizationId required" },
+        { status: 400 },
+      );
+    }
+
     let status: InvoiceStatus | undefined = undefined;
+
     if (
       statusParam &&
       Object.values(InvoiceStatus).includes(statusParam as InvoiceStatus)
@@ -21,27 +32,37 @@ export async function GET(req: NextRequest) {
 
     const invoices = await prisma.invoice.findMany({
       where: {
+        organizationId,
+
         ...(customerId && { customerId }),
         ...(status && { status }),
       },
+
       include: {
         customer: true,
         payments: true,
-        invoiceItems: { include: { product: true } },
+        invoiceItems: {
+          include: {
+            product: true,
+          },
+        },
       },
-      orderBy: { createdAt: "desc" },
+
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
     return NextResponse.json(invoices);
   } catch (err) {
     console.error(err);
+
     return NextResponse.json(
       { error: "Failed to fetch invoices" },
       { status: 500 },
     );
   }
 }
-
 // POST → Create a new invoice with items
 
 export async function POST(req: NextRequest) {

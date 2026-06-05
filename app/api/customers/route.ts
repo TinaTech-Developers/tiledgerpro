@@ -7,13 +7,14 @@ import { authMiddleware } from "@/lib/middleware";
 // GET all customers for an organization
 export async function GET(req: NextRequest) {
   try {
-    const user = await authMiddleware(req);
+    const organizationId = req.nextUrl.searchParams.get("organizationId");
 
-    if (!user || user instanceof NextResponse) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: "organizationId required" },
+        { status: 400 },
+      );
     }
-
-    const organizationId = (user as any).user.organizationId;
 
     const customers = await prisma.customer.findMany({
       where: { organizationId },
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(customers);
   } catch (err) {
+    console.error(err);
+
     return NextResponse.json(
       { error: "Failed to fetch customers" },
       { status: 500 },
